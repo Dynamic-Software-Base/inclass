@@ -1,3 +1,4 @@
+[![Board Status](https://dev.azure.com/narjis-lola/6dc47091-22e3-4e00-b118-e1f3aff4e30a/16b421fc-ee7f-4b1c-8c10-fa4b84333a5a/_apis/work/boardbadge/403e8b81-ef57-4fb0-ae4e-05dcedaa7a8f)](https://dev.azure.com/narjis-lola/6dc47091-22e3-4e00-b118-e1f3aff4e30a/_boards/board/t/16b421fc-ee7f-4b1c-8c10-fa4b84333a5a/Microsoft.RequirementCategory)
 # Clean Architecture Template
 
 What's included in the template?
