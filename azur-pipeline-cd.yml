@@ -1,0 +1,16 @@
+trigger:
+  branches:
+    include:
+      - staging
+
+pool:
+  name: 'Default'
+  
+variables:
+  buildConfiguration: 'Release'
+  dotnetVersion: '10.x'
+  azureServiceConnection: 'inclass-azure-service-collection'
+  webAppStaging: 'inclass-staging'
+  
+stages:
+  
