@@ -5,10 +5,20 @@
 # Secrets — NEVER commit these
 appsettings.Development.json
 appsettings.Local.json
+appsettings.*.json
+!appsettings.json                    ← keep the base one
+!appsettings.Production.json         ← keep production template (no real values)
 *.pfx
 *.key
+*.pem
 .env
 .env.*
+secrets.json
+
+# Docker
+.dockerignore is tracked, docker-compose.override.yml is not
+docker-compose.override.yml
+
 
 # OS
 .DS_Store
