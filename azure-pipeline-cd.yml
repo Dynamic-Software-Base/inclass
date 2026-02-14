@@ -108,7 +108,7 @@ stages:
       - group: vg-staging
     jobs:
       - job: MigratingDevJob
-        displayName: 'Eun staging migration'
+        displayName: 'Run staging migration'
         steps:
           - task: UseDotNet@2
             displayName: 'Install .NET $(dotnetVersion)'
@@ -121,7 +121,29 @@ stages:
             inputs:
               artifactName: 'built-source'
               targetPath: '$(System.DefaultWorkingDirectory)'
-
+          - powershell: |
+              $cs = "$(ConnectionStrings--Default)"
+              
+              if ([string]::IsNullOrWhiteSpace($cs)) {
+                Write-Host "##vso[task.logissue type=error]ConnectionStrings--Default is EMPTY / not injected."
+                exit 1
+              }
+              
+              Write-Host "Connection string is present."
+              Write-Host "Length: $($cs.Length)"
+              
+              if ($cs -match "(?i)Host\s*=\s*([^;]+)") {
+                $hostName = $matches[1].Trim()
+                Write-Host "Host parsed: $hostName"
+                Write-Host "DNS test:"
+                nslookup $hostName
+                Write-Host "TCP 5432 test:"
+                Test-NetConnection $hostName -Port 5432
+              } else {
+                Write-Host "Could not parse Host= from the connection string."
+                exit 1
+              }
+              displayName: "Verify DB connection string + DNS/network (safe)"
           - task: DotNetCoreCLI@2
             displayName: 'RUN dev Migrations'
             inputs:
