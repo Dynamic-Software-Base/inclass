@@ -172,40 +172,40 @@ stages:
                     appSettings: >-
                       -ConnectionStrings__Default "$(ConnectionStrings--Default)"
   - stage: Validate
-      displayName: 'Validate Deployment'
-      dependsOn: DeployDev
-      jobs:
-        - job: HealthCheckJob
-          displayName: 'Health Check'
-          steps:
-            - task: PowerShell@2
-              displayName: 'Wait for app to start'
-              inputs:
-                targetType: 'inline'
-                script: Start-Sleep -Seconds 30
+    displayName: 'Validate Deployment'
+    dependsOn: DeployDev
+    jobs:
+      - job: HealthCheckJob
+        displayName: 'Health Check'
+        steps:
+          - task: PowerShell@2
+            displayName: 'Wait for app to start'
+            inputs:
+              targetType: 'inline'
+              script: Start-Sleep -Seconds 30
 
-            - task: PowerShell@2
-              displayName: 'Health check'
-              inputs:
-                targetType: 'inline'
-                script: |
-                  $url = "https://$(webAppStaging).azurewebsites.net/health"
-                  $maxAttempts = 5
-                  $attempt = 0
-                  do {
-                    $attempt++
-                    Write-Host "Health check attempt $attempt of $maxAttempts"
-                    try {
-                      $response = Invoke-RestMethod -Uri $url -Method Get -TimeoutSec 30
-                      if ($response.status -eq "Healthy") {
-                        Write-Host "App is healthy"
-                        exit 0
-                      }
-                    } catch {
-                      Write-Host "Attempt $attempt failed: $_"
+          - task: PowerShell@2
+            displayName: 'Health check'
+            inputs:
+              targetType: 'inline'
+              script: |
+                $url = "https://$(webAppStaging).azurewebsites.net/health"
+                $maxAttempts = 5
+                $attempt = 0
+                do {
+                  $attempt++
+                  Write-Host "Health check attempt $attempt of $maxAttempts"
+                  try {
+                    $response = Invoke-RestMethod -Uri $url -Method Get -TimeoutSec 30
+                    if ($response.status -eq "Healthy") {
+                      Write-Host "App is healthy"
+                      exit 0
                     }
-                    Start-Sleep -Seconds 15
-                  } while ($attempt -lt $maxAttempts)
-                  
-                  Write-Host "Health check failed after $maxAttempts attempts"
-                  exit 1
+                  } catch {
+                    Write-Host "Attempt $attempt failed: $_"
+                  }
+                  Start-Sleep -Seconds 15
+                } while ($attempt -lt $maxAttempts)
+                
+                Write-Host "Health check failed after $maxAttempts attempts"
+                exit 1
