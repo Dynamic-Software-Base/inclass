@@ -2,7 +2,6 @@ trigger:
   branches:
     include:
       - staging
-      - develop
 
 pool:
   name: 'Default'
@@ -109,7 +108,7 @@ stages:
       - group: vg-staging
     jobs:
       - job: MigratingDevJob
-        displayName: 'Run staging migration'
+        displayName: 'Eun staging migration'
         steps:
           - task: UseDotNet@2
             displayName: 'Install .NET $(dotnetVersion)'
@@ -122,37 +121,7 @@ stages:
             inputs:
               artifactName: 'built-source'
               targetPath: '$(System.DefaultWorkingDirectory)'
-          - powershell: |
-              $cs = "$(ConnectionStrings--Default)"
-              
-              if ([string]::IsNullOrWhiteSpace($cs)) {
-                Write-Host "##vso[task.logissue type=error]ConnectionStrings--Default is EMPTY / not injected."
-                exit 1
-              }
-              
-              Write-Host "Connection string is present."
-              Write-Host "Length: $($cs.Length)"
-              
-              if ($cs -match "(?i)Host\s*=\s*([^;]+)") {
-                $hostName = $matches[1].Trim()
-                Write-Host "Host parsed: $hostName"
-                Write-Host "DNS test:"
-                nslookup $hostName
-              
-                Write-Host "TCP 5432 test:"
-                Test-NetConnection $hostName -Port 5432
-              } else {
-                Write-Host "Could not parse Host= from the connection string."
-                exit 1
-              }
-            displayName: "Verify DB connection string + DNS/network (safe)"
-          - powershell: |
-              $hostName = "db.jukasykwbsdlzmisvwev.supabase.co"
-              Write-Host "Trying IPv4-only lookup:"
-              Resolve-DnsName $hostName -Type A -ErrorAction SilentlyContinue | Format-Table
-              Write-Host "Trying IPv6 lookup:"
-              Resolve-DnsName $hostName -Type AAAA -ErrorAction SilentlyContinue | Format-Table
-            displayName: "Check A vs AAAA records"
+
           - task: DotNetCoreCLI@2
             displayName: 'RUN dev Migrations'
             inputs:
@@ -204,39 +173,40 @@ stages:
                       -ConnectionStrings__Default "$(ConnectionStrings--Default)"
   - stage: Validate
     displayName: 'Validate Deployment'
-    dependsOn: DeployDev
-    jobs:
-      - job: HealthCheckJob
-        displayName: 'Health Check'
-        steps:
-          - task: PowerShell@2
-            displayName: 'Wait for app to start'
-            inputs:
-              targetType: 'inline'
-              script: Start-Sleep -Seconds 30
+      dependsOn: DeployDev
+      jobs:
+        - job: HealthCheckJob
+          displayName: 'Health Check'
+          steps:
+            - task: PowerShell@2
+              displayName: 'Wait for app to start'
+              inputs:
+                targetType: 'inline'
+                script: Start-Sleep -Seconds 30
 
-          - task: PowerShell@2
-            displayName: 'Health check'
-            inputs:
-              targetType: 'inline'
-              script: |
-                $url = "https://$(webAppStaging).azurewebsites.net/health"
-                $maxAttempts = 5
-                $attempt = 0
-                do {
-                  $attempt++
-                  Write-Host "Health check attempt $attempt of $maxAttempts"
-                  try {
-                    $response = Invoke-RestMethod -Uri $url -Method Get -TimeoutSec 30
-                    if ($response.status -eq "Healthy") {
-                      Write-Host "App is healthy"
-                      exit 0
+            - task: PowerShell@2
+              displayName: 'Health check'
+              inputs:
+                targetType: 'inline'
+                script: |
+                  $url = "https://$(webAppStaging).azurewebsites.net/health"
+                  $maxAttempts = 5
+                  $attempt = 0
+
+                  do {
+                    $attempt++
+                    Write-Host "Health check attempt $attempt of $maxAttempts"
+                    try {
+                      $response = Invoke-RestMethod -Uri $url -Method Get -TimeoutSec 30
+                      if ($response.status -eq "Healthy") {
+                        Write-Host "✅ App is healthy"
+                        exit 0
+                      }
+                    } catch {
+                      Write-Host "⚠️ Attempt $attempt failed: $_"
                     }
-                  } catch {
-                    Write-Host "Attempt $attempt failed: $_"
-                  }
-                  Start-Sleep -Seconds 15
-                } while ($attempt -lt $maxAttempts)
-                
-                Write-Host "Health check failed after $maxAttempts attempts"
-                exit 1
+                    Start-Sleep -Seconds 15
+                  } while ($attempt -lt $maxAttempts)
+
+                  Write-Host "❌ Health check failed after $maxAttempts attempts"
+                  exit 1
