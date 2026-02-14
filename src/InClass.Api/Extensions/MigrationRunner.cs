@@ -1,5 +1,6 @@
 ﻿using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
+using Web.Api.Common.Logger;
 
 namespace Web.Api.Extensions;
 
@@ -15,16 +16,16 @@ public static class MigrationRunner
 
         if (!pending.Any())
         {
-            logger.LogInformation("No migrations found.");
+            LogMessages.NoMigrationFound(logger);
             return;
         }
-        logger.LogInformation("Migrating database...");
+       LogMessages.Migrating(logger);
         foreach (string m in pending)
         {
-            logger.LogInformation("    ->{MigrationName}", m);
+           LogMessages.LogPendingMigrationNames(logger, m);
         }
 
         await dbContext.Database.MigrateAsync();
-        logger.LogInformation("Database migration complete.");
+       LogMessages.MigratingCompleted(logger);
     }
 }

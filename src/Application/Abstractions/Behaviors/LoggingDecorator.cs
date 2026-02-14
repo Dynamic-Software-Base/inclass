@@ -1,4 +1,5 @@
 ﻿using Application.Abstractions.Messaging;
+using Application.Common;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Context;
