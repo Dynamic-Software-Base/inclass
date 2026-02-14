@@ -1,0 +1,94 @@
+trigger:
+  branches:
+    include:
+      - develop
+
+pool: 
+  name: 'Default'
+
+variables: 
+  buildConfiguration: 'Release'
+  dotnetVersion: '10.x'
+  
+stages:
+  - stage: Build
+    displayName: 'Build'
+    jobs:
+      - job: BuildJob
+        displayName: 'Build Job'
+        steps:
+          - task: UseDotNet@2
+            displayName: 'Installing .NET $(dotnetVersion)'
+            inputs:
+              version: $(dotnetVersion)
+              packageType: 'sdk'
+              includePreviewVersions: false
+              
+          - task: DotNetCoreCLI@2
+            displayName: 'Restore'
+            inputs: 
+              command: 'restore'
+              projects: '**/*.sln'
+              
+          - task : DotNetCoreCLI@2
+            displayName: 'BUILD'
+            inputs: 
+              command: 'build'
+              projects: '**/*.sln'
+              arguments: '--configuration $(buildConfiguration) --no-restore'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Publish API'
+            inputs:
+              command: 'publish'
+              projects: 'src/InClass.Api/InClass.Api.csproj'
+              arguments: '--configuration $(buildConfiguration) --no-restore --output $(Build.ArtifactStagingDirectory)/api'
+              zipAfterPublish: true
+          
+          - task: PublishPipelineArtifact@1
+            displayName: 'Upload source for testing'
+            inputs: 
+              targetPath: '$(System.DefaultWorkingDirectory)'
+              artifactName: 'build-source'
+              publishLocation: 'pipeline'
+          - task: PublishPipelineArtifact@1
+            displayName: 'Upload deployment package'
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/api'
+              artifactName: 'drop'
+              publishLocation: 'pipeline'
+              
+  - stage: Test
+    displayName: 'Test stage'
+    dependsOn: Build
+    jobs:
+      - job: TestJob
+        displayName: 'Run Tests'
+        steps:
+          - task: UseDotNet@2
+            displayName: 'Installing .NET $(dotnetVersion)'
+            inputs: 
+              version: $(dotnetVersion)
+              packageType: 'sdk'
+              includePreviewVersions: false
+              
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download source build'
+            inputs: 
+              artifactName: 'build-source'
+              targetPath: '$(System.DefaultWorkingDirectory)'
+              
+          - task: DotNetCoreCLI@2
+            displayName: 'RUN unit tests'
+            inputs: 
+              command: 'test'
+              projects: 'tests/**/*Tests.csproj'
+              arguments: '--configuration $(buildConfiguration) --no-restore'
+              publishTestResults: true
+              
+          - task: PublishCodeCoverageResults@2
+            displayName: 'Publish coverage'
+            condition: succeededOrFailed()
+            inputs:
+              summaryFileLocation: '$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml'
+              failIfCoverageEmpty: false
