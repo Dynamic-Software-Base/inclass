@@ -36,12 +36,26 @@ stages:
               command: 'build'
               projects: '**/*.sln'
               arguments: '--configuration $(buildConfiguration) --no-restore'
-              
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Publish API'
+            inputs:
+              command: 'publish'
+              projects: 'src/InClass.Api/InClass.Api.csproj'
+              arguments: '--configuration $(buildConfiguration) --no-restore --output $(Build.ArtifactStagingDirectory)/api'
+              zipAfterPublish: true
+          
           - task: PublishPipelineArtifact@1
             displayName: 'Upload source for testing'
             inputs: 
               targetPath: '$(System.DefaultWorkingDirectory)'
-              artifactName: 'build.source'
+              artifactName: 'build-source'
+              publishLocation: 'pipeline'
+          - task: PublishPipelineArtifact@1
+            displayName: 'Upload deployment package'
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/api'
+              artifactName: 'drop'
               publishLocation: 'pipeline'
               
   - stage: Test
@@ -58,21 +72,21 @@ stages:
               packageType: 'sdk'
               includePreviewVersions: false
               
-          - task: DownloadPipelineArtifact@1
+          - task: DownloadPipelineArtifact@2
             displayName: 'Download source build'
             inputs: 
-              artifactName: 'build.source'
+              artifactName: 'build-source'
               targetPath: '$(System.DefaultWorkingDirectory)'
               
           - task: DotNetCoreCLI@2
             displayName: 'RUN unit tests'
             inputs: 
-              command: 'run'
-              project: 'tests/**/*Tests.csproj'
+              command: 'test'
+              projects: 'tests/**/*Tests.csproj'
               arguments: '--configuration $(buildConfiguration) --no-restore'
               publishTestResults: true
               
-          - task: PublishCodeCoveCoverageResults@2
+          - task: PublishCodeCoverageResults@2
             displayName: 'Publish coverage'
             condition: succeededOrFailed()
             inputs:

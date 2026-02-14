@@ -27,8 +27,12 @@ app.MapEndpoints();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwaggerWithUi();
+}
 
-    app.ApplyMigrations();
+if (args.Contains("--migrate"))
+{
+    await MigrationRunner.RunMigrationAsync(app.Services);
+    return;
 }
 
 app.MapHealthChecks("health", new HealthCheckOptions
@@ -52,7 +56,7 @@ app.MapControllers();
 await app.RunAsync();
 
 // REMARK: Required for functional and integration tests to work.
-namespace Web.Api
+namespace InClass.Api
 {
     public partial class Program;
 }

@@ -1,7 +1,11 @@
-trigger:
-  branches:
-    include:
-      - staging
+resources:
+  pipelines:
+    - pipeline: ci
+      source: 'azure-pipeline-ci'      # must match exact pipeline name in Azure DevOps
+      trigger:
+        branches:
+          include:
+            - develop
 
 pool:
   name: 'Default'
@@ -13,4 +17,200 @@ variables:
   webAppStaging: 'inclass-staging'
   
 stages:
-  
+  - stage: Build
+    displayName: 'Build'
+    jobs:
+      - job: Buildjob
+        displayName: 'Build and publish'
+        steps:
+          - task: UseDotNet@2
+            displayName: 'Installing .NET $(dotnetVersion)'
+            inputs: 
+              version: $(dotnetVersion)
+              packageType: 'sdk'
+              includePreviewVersions: false
+          
+          - task: DotNetCoreCLI@2
+            displayName: 'Restore'
+            inputs: 
+              command: 'restore'
+              projects: '**/*.sln'
+              
+          - task: DotNetCoreCLI@2
+            displayName: 'Build'
+            inputs: 
+              command: 'build'
+              projects: '**/*.sln'
+              arguments: '--configuration $(buildConfiguration) --no-restore'
+              
+          - task: DotNetCoreCLI@2
+            displayName: 'publish API'
+            inputs: 
+              command: 'publish'
+              projects: 'src/InClass.Api/*.csproj'
+              arguments: '--configuration $(buildConfiguration) --no-restore --output $(Build.ArtifactStagingDirectory)/api'
+              zipAfterPublish: true
+              
+          - task: PublishPipelineArtifact@1
+            displayName: 'Upload source for testing'
+            inputs: 
+              targetPath: '$(System.DefaultWorkingDirectory)'
+              artifactName: 'built-source'
+              publishLocation: 'pipeline'
+              
+          - task: PublishPipelineArtifact@1
+            displayName: 'Upload deployment package'
+            inputs: 
+              targetPath: '$(Build.ArtifactStagingDirectory)/api'
+              artifactName: 'drop'
+              publishLocation: 'pipeline'
+              
+  - stage: Test
+    displayName: 'Testing stage'
+    dependsOn: Build
+    jobs:
+      - job: TestJob
+        displayName: 'Run tests'
+        steps:
+          - task: UseDotNet@2
+            displayName: 'Install .NET $(dotnetVersion)'
+            inputs:
+              version: $(dotnetVersion)
+              packageType: 'sdk'
+              includePreviewVersions: false
+
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download built source'
+            inputs:
+              artifactName: 'built-source'
+              targetPath: '$(System.DefaultWorkingDirectory)'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Run unit tests'
+            inputs:
+              command: 'test'
+              projects: 'tests/**/*Tests.csproj'
+              arguments: '--configuration $(buildConfiguration) --no-restore'
+              publishTestResults: true
+
+          - task: PublishCodeCoverageResults@2
+            displayName: 'Publish coverage'
+            condition: succeededOrFailed()
+            inputs:
+              summaryFileLocation: '$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml'
+              failIfCoverageEmpty: false
+              
+  - stage: MigrateDev
+    displayName: 'Migrate Staging Database'
+    dependsOn: Test
+    condition: |
+      and(
+        succeeded(),
+        eq(variables['Build.SourceBranch'], 'refs/heads/staging')
+      )
+    variables: 
+      - group: vg-staging
+    jobs:
+      - job: MigratingDevJob
+        displayName: 'Eun staging migration'
+        steps:
+          - task: UseDotNet@2
+            displayName: 'Install .NET $(dotnetVersion)'
+            inputs:
+              version: $(dotnetVersion)
+              includePreviewVersions: false
+              packageType: 'sdk'
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download built source'
+            inputs:
+              artifactName: 'built-source'
+              targetPath: '$(System.DefaultWorkingDirectory)'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'RUN dev Migrations'
+            inputs:
+              command: 'run'
+              projects: 'src/InClass.Api/InClass.Api.csproj'
+              arguments: '--configuration $(buildConfiguration) -- --migrate'
+            env:
+              ConnectionStrings__Default: $(ConnectionStrings--Default)
+  - stage: DeployDev
+    displayName: 'Deploy to Staging'
+    dependsOn: MigrateDev
+    condition: |
+      and(
+        succeeded(),
+        eq(variables['Build.SourceBranch'], 'refs/heads/staging')
+      )
+    variables:
+      - group: vg-staging
+    jobs:
+      - deployment: DeployDevJob
+        displayName: 'Deploy to staging'
+        environment: 'staging'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: UseDotNet@2
+                  displayName: 'Install .NET $(dotnetVersion)'
+                  inputs:
+                    version: $(dotnetVersion)
+                    packageType: 'sdk'
+                    includePreviewVersions: false
+
+                - task: DownloadPipelineArtifact@2
+                  displayName: 'Download deployment package'
+                  inputs:
+                    artifactName: 'drop'
+                    targetPath: '$(System.DefaultWorkingDirectory)/deploy'
+
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to Dev App Service'
+                  inputs:
+                    azureSubscription: '$(azureServiceConnection)'
+                    appType: 'webApp'
+                    appName: '$(webAppStaging)'
+                    package: '$(System.DefaultWorkingDirectory)/deploy/*.zip'
+                    deploymentMethod: 'auto'
+                    appSettings: >-
+                      -ConnectionStrings__Default "$(ConnectionStrings--Default)"
+  - stage: Validate
+    displayName: 'Validate Deployment'
+      dependsOn: DeployDev
+      jobs:
+        - job: HealthCheckJob
+          displayName: 'Health Check'
+          steps:
+            - task: PowerShell@2
+              displayName: 'Wait for app to start'
+              inputs:
+                targetType: 'inline'
+                script: Start-Sleep -Seconds 30
+
+            - task: PowerShell@2
+              displayName: 'Health check'
+              inputs:
+                targetType: 'inline'
+                script: |
+                  $url = "https://$(webAppStaging).azurewebsites.net/health"
+                  $maxAttempts = 5
+                  $attempt = 0
+
+                  do {
+                    $attempt++
+                    Write-Host "Health check attempt $attempt of $maxAttempts"
+                    try {
+                      $response = Invoke-RestMethod -Uri $url -Method Get -TimeoutSec 30
+                      if ($response.status -eq "Healthy") {
+                        Write-Host "✅ App is healthy"
+                        exit 0
+                      }
+                    } catch {
+                      Write-Host "⚠️ Attempt $attempt failed: $_"
+                    }
+                    Start-Sleep -Seconds 15
+                  } while ($attempt -lt $maxAttempts)
+
+                  Write-Host "❌ Health check failed after $maxAttempts attempts"
+                  exit 1
