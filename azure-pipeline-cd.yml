@@ -130,8 +130,6 @@ stages:
               arguments: '--configuration $(buildConfiguration) -- --migrate'
             env:
               ConnectionStrings__Default: $(ConnectionStrings--Default)
-              ASPNETCORE_ENVIRONMENT: Staging
-              DOTNET_ENVIRONMENT: Staging
   - stage: DeployDev
     displayName: 'Deploy to Staging'
     dependsOn: MigrateDev
