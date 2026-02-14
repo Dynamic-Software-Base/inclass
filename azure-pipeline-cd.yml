@@ -138,13 +138,21 @@ stages:
                 Write-Host "Host parsed: $hostName"
                 Write-Host "DNS test:"
                 nslookup $hostName
+              
                 Write-Host "TCP 5432 test:"
                 Test-NetConnection $hostName -Port 5432
               } else {
                 Write-Host "Could not parse Host= from the connection string."
                 exit 1
               }
-              displayName: "Verify DB connection string + DNS/network (safe)"
+            displayName: "Verify DB connection string + DNS/network (safe)"
+          - powershell: |
+              $hostName = "db.jukasykwbsdlzmisvwev.supabase.co"
+              Write-Host "Trying IPv4-only lookup:"
+              Resolve-DnsName $hostName -Type A -ErrorAction SilentlyContinue | Format-Table
+              Write-Host "Trying IPv6 lookup:"
+              Resolve-DnsName $hostName -Type AAAA -ErrorAction SilentlyContinue | Format-Table
+            displayName: "Check A vs AAAA records"
           - task: DotNetCoreCLI@2
             displayName: 'RUN dev Migrations'
             inputs:
