@@ -123,11 +123,11 @@ stages:
               targetPath: '$(System.DefaultWorkingDirectory)'
         
           - task: DotNetCoreCLI@2
-            displayName: 'RUN dev Migrations'
+            displayName: 'RUN staging Migrations'
             inputs:
               command: 'run'
               projects: 'src/InClass.Api/InClass.Api.csproj'
-              arguments: '--configuration $(buildConfiguration) -- --migrate'
+              arguments: '--configuration $(buildConfiguration) --no-launch-profile -- --migrate'
             env:
               ConnectionStrings__Default: $(ConnectionStrings--Default)
   - stage: DeployDev
