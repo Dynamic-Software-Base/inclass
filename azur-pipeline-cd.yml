@@ -1,11 +1,7 @@
-resources:
-  pipelines:
-    - pipeline: ci
-      source: 'azure-pipeline-ci'      # must match exact pipeline name in Azure DevOps
-      trigger:
-        branches:
-          include:
-            - develop
+trigger:
+  branches:
+    include:
+      - staging
 
 pool:
   name: 'Default'
