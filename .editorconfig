@@ -2,7 +2,7 @@ root = true
 
 # C# files
 [*.cs]
-
+dotnet_diagnostic.CA1303.severity = none
 #### Core EditorConfig Options ####
 
 # Indentation and spacing

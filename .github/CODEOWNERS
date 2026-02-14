@@ -1,0 +1,11 @@
+# Global owners — all PRs require review from one of these
+*                           @EmperorXSama @Okami-03
+
+# Infrastructure / pipeline files — stricter ownership
+.github/                    @EmperorXSama
+*.yml                       @EmperorXSama
+infrastructure/             @EmperorXSama
+
+# Core application areas
+src/API/                    @EmperorXSama @Okami-03
+src/Domain/                 @EmperorXSama
