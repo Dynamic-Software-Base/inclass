@@ -2,6 +2,7 @@ trigger:
   branches:
     include:
       - staging
+      - develop
 
 pool:
   name: 'Default'
