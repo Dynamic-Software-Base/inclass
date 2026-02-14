@@ -172,7 +172,7 @@ stages:
                     appSettings: >-
                       -ConnectionStrings__Default "$(ConnectionStrings--Default)"
   - stage: Validate
-    displayName: 'Validate Deployment'
+      displayName: 'Validate Deployment'
       dependsOn: DeployDev
       jobs:
         - job: HealthCheckJob
@@ -192,21 +192,20 @@ stages:
                   $url = "https://$(webAppStaging).azurewebsites.net/health"
                   $maxAttempts = 5
                   $attempt = 0
-
                   do {
                     $attempt++
                     Write-Host "Health check attempt $attempt of $maxAttempts"
                     try {
                       $response = Invoke-RestMethod -Uri $url -Method Get -TimeoutSec 30
                       if ($response.status -eq "Healthy") {
-                        Write-Host "✅ App is healthy"
+                        Write-Host "App is healthy"
                         exit 0
                       }
                     } catch {
-                      Write-Host "⚠️ Attempt $attempt failed: $_"
+                      Write-Host "Attempt $attempt failed: $_"
                     }
                     Start-Sleep -Seconds 15
                   } while ($attempt -lt $maxAttempts)
-
-                  Write-Host "❌ Health check failed after $maxAttempts attempts"
+                  
+                  Write-Host "Health check failed after $maxAttempts attempts"
                   exit 1
