@@ -8,7 +8,7 @@ trigger:
     include:
       - InClass/src/**
       - InClass/tests/**
-      - .azuredevops/**
+      - InClass/.azuredevops/**
 
 pr: none
 
