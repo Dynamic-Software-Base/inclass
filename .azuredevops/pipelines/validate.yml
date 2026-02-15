@@ -13,7 +13,7 @@ pr:
     include:
       - InClass/src/**
       - InClass/tests/**
-      - .azuredevops/**
+      - InClass/.azuredevops/**
 
 pool:
   name: 'Default'
