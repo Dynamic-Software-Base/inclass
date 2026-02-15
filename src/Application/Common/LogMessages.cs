@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 
 namespace Application.Common;
-//add comment
+//add comment change version
 internal static partial class LogMessages
 {
     [LoggerMessage(Level = LogLevel.Information, Message = "Processing command {Command}")]
