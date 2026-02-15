@@ -1,0 +1,39 @@
+parameters:
+  - name: apiProject
+    type: string
+    default: 'InClass/src/InClass.Api/InClass.Api.csproj'   # change if your API project name differs
+  - name: buildConfiguration
+    type: string
+    default: 'Release'
+  - name: artifactName
+    type: string
+    default: 'drop'
+  - name: publishDir
+    type: string
+    default: '$(Build.ArtifactStagingDirectory)/publish'
+
+steps:
+  - task: DotNetCoreCLI@2
+    displayName: 'Publish (dotnet publish)'
+    inputs:
+      command: 'publish'
+      publishWebProjects: false
+      projects: '${{ parameters.apiProject }}'
+      arguments: >
+        --configuration ${{ parameters.buildConfiguration }}
+        --no-restore
+        --output ${{ parameters.publishDir }}
+        /p:VersionPrefix=$(VersionPrefix)
+        /p:VersionSuffix=$(VersionSuffix)
+        /p:InformationalVersion=$(VersionPrefix).$(VersionSuffix)+$(Build.SourceVersion)
+      zipAfterPublish: true
+
+  # DotNetCoreCLI with zipAfterPublish produces a zip inside publishDir.
+  # We'll publish the whole folder as artifact.
+
+  - task: PublishPipelineArtifact@1
+    displayName: 'Publish pipeline artifact'
+    inputs:
+      targetPath: '${{ parameters.publishDir }}'
+      artifact: '${{ parameters.artifactName }}'
+      publishLocation: 'pipeline'
