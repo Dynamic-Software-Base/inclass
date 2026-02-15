@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 
 namespace Application.Common;
-//add comment change version 10.0.100
+//test staging ci trigger
 internal static partial class LogMessages
 {
     [LoggerMessage(Level = LogLevel.Information, Message = "Processing command {Command}")]
