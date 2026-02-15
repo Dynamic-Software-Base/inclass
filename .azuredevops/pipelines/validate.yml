@@ -11,8 +11,8 @@ pr:
       - main
   paths:
     include:
-      - solution/src/**
-      - solution/tests/**
+      - InClass/src/**
+      - InClass/tests/**
       - .azuredevops/**
     exclude:
       - docs/**
