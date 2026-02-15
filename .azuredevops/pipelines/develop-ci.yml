@@ -8,7 +8,7 @@ trigger:
     include:
       - InClass/src/**
       - InClass/tests/**
-      - .azuredevops/**
+      - InClass/.azuredevops/**
 
 pr: none
 
@@ -31,4 +31,4 @@ stages:
             parameters:
               solution: '**/*.sln'
               buildConfiguration: '$(buildConfiguration)'
-              testProjects: 'InClass/tests/**/*.csproj'
+              testProjects: 'tests/**/*.csproj'
