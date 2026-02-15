@@ -12,7 +12,15 @@ parameters:
     type: string
     default: '$(Build.ArtifactStagingDirectory)/publish'
 
+
+
 steps:
+
+  - script: |
+      echo "Working dir: $(Build.SourcesDirectory)"
+      dir "$(Build.SourcesDirectory)" /s /b *.csproj 2>&1
+    displayName: 'Debug: find csproj'
+
   - task: DotNetCoreCLI@2
     displayName: 'Publish (dotnet publish)'
     inputs:
