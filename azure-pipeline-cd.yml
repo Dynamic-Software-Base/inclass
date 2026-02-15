@@ -127,7 +127,7 @@ stages:
             inputs:
               command: 'run'
               projects: 'src/InClass.Api/InClass.Api.csproj'
-              arguments: '--configuration $(buildConfiguration) -- --migrate'
+              arguments: '--configuration $(buildConfiguration) --no-launch-profile -- --migrate'
             env:
               ConnectionStrings__Default: $(ConnectionStrings--Default)
   - stage: DeployDev
