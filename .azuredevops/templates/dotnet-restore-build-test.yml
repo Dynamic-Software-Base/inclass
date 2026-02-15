@@ -7,7 +7,7 @@ parameters:
     default: 'Release'
   - name: testProjects
     type: string
-    default: 'InClass/tests/**/*.csproj'
+    default: 'tests/**/*.csproj'
 
 
 steps:
