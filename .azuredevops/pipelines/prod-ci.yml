@@ -1,0 +1,113 @@
+name: prod_ci_$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - solution/src/**
+      - solution/tests/**
+      - .azuredevops/**
+
+pr: none
+
+pool:
+  name: 'default'  # your self-hosted agent pool for now
+
+variables:
+  buildConfiguration: 'Release'
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+  VersionPrefix: '1.0'
+  VersionSuffix: '$(Build.BuildId)'
+
+  # same service connection
+  azureServiceConnection: 'inclass-azure-service-collection'
+
+  # TODO: set your production app service name here
+  webAppProduction: 'inclass-production'   # <-- change to your real prod app service name
+
+stages:
+  # -------------------------
+  # Stage 1: Build/Test/Publish
+  # -------------------------
+  - stage: Build_Test_Publish
+    displayName: 'Build, Test, Publish Artifact'
+    jobs:
+      - job: CI
+        displayName: 'CI'
+        steps:
+          - template: ../templates/dotnet-restore-build-test.yml
+            parameters:
+              solution: '**/*.sln'
+              buildConfiguration: '$(buildConfiguration)'
+              testProjects: 'solution/tests/**/*.csproj'
+
+          - template: ../templates/dotnet-publish-artifact.yml
+            parameters:
+              apiProject: 'solution/src/InClass.Api/InClass.Api.csproj'  # set exact path
+              buildConfiguration: '$(buildConfiguration)'
+              artifactName: 'drop'
+  
+  # -------------------------
+  # Stage 2: Migrate Production DB
+  # -------------------------
+  - stage: MigrateProduction
+    displayName: 'Migrate Production Database'
+    dependsOn: Build_Test_Publish
+    condition: succeeded()
+    variables:
+      - group: vg-production
+    jobs:
+      - job: MigratingProdJob
+        displayName: 'Run production migration'
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - task: UseDotNet@2
+            displayName: 'Use .NET SDK'
+            inputs:
+              packageType: 'sdk'
+              useGlobalJson: true
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Run EF migrations (production)'
+            inputs:
+              command: 'run'
+              projects: 'solution/src/InClass.Api/InClass.Api.csproj'
+              arguments: '--configuration $(buildConfiguration) --no-launch-profile -- --migrate'
+            env:
+              ConnectionStrings__Default: $(ConnectionStrings--Default)
+  
+  # -------------------------
+  # Stage 3: Deploy to Production App Service
+  # -------------------------
+  - stage: DeployProduction
+    displayName: 'Deploy to Production App Service'
+    dependsOn: MigrateProduction
+    condition: succeeded()
+    variables:
+      - group: vg-production
+    jobs:
+      - deployment: DeployProdWeb
+        displayName: 'Deploy (production)'
+        environment: 'production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: DownloadPipelineArtifact@2
+                  displayName: 'Download artifact'
+                  inputs:
+                    artifactName: 'drop'
+                    targetPath: '$(Pipeline.Workspace)/drop'
+
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to Azure App Service (production)'
+                  inputs:
+                    appType: 'webApp'
+                    azureSubscription: '$(azureServiceConnection)'
+                    appName: '$(webAppProduction)'
+                    package: '$(Pipeline.Workspace)/drop/**/*.zip'
