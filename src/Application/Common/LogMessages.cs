@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 
 namespace Application.Common;
-
+//test staging ci trigger
 internal static partial class LogMessages
 {
-    [LoggerMessage(Level = LogLevel.Information, Message = "Processing command {Command}")]
+    [LoggerMessage(Level = LogLevel.Information, Message = "Processing -> command {Command}")]
     internal  static partial void ProcessingCommand(ILogger logger, string command);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Completed command {Command}")]

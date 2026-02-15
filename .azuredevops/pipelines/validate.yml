@@ -1,0 +1,37 @@
+name: validate_$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger: none   # do not run on push (we only want PR validation here)
+
+pr:
+  autoCancel: true
+  branches:
+    include:
+      - develop
+      - staging
+      - main
+  paths:
+    include:
+      - InClass/src/**
+      - InClass/tests/**
+      - .azuredevops/**
+
+pool:
+  name: 'Default'
+
+variables:
+  buildConfiguration: 'Release'
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+
+stages:
+  - stage: Validate
+    displayName: 'PR Validation'
+    jobs:
+      - job: BuildTest
+        displayName: 'Restore / Build / Test'
+        steps:
+          - template: ../templates/dotnet-restore-build-test.yml
+            parameters:
+              solution: '**/*.sln'
+              buildConfiguration: '$(buildConfiguration)'
+              testProjects: 'InClass/tests/**/*.csproj'

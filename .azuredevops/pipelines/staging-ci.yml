@@ -1,0 +1,116 @@
+name: staging_ci_$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - staging
+  paths:
+    include:
+      - InClass/src/**
+      - InClass/tests/**
+      - .azuredevops/**
+
+pr: none
+
+pool:
+  name: 'default'   # your self-hosted agent pool
+
+variables:
+  buildConfiguration: 'Release'
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+  VersionPrefix: '1.0'
+  VersionSuffix: '$(Build.BuildId)'
+
+  # your provided values
+  azureServiceConnection: 'inclass-azure-service-collection'
+  webAppStaging: 'inclass-staging'
+
+stages:
+  # -------------------------
+  # Stage 1: Build/Test/Publish
+  # -------------------------
+  - stage: Build_Test_Publish
+    displayName: 'Build, Test, Publish Artifact'
+    jobs:
+      - job: CI
+        displayName: 'CI'
+        steps:
+          - template: ../templates/dotnet-restore-build-test.yml
+            parameters:
+              solution: '**/*.sln'
+              buildConfiguration: '$(buildConfiguration)'
+              testProjects: 'InClass/tests/**/*.csproj'
+
+          - template: ../templates/dotnet-publish-artifact.yml
+            parameters:
+              apiProject: 'InClass/src/InClass.Api/InClass.Api.csproj'  # set exact path
+              buildConfiguration: '$(buildConfiguration)'
+              artifactName: 'drop'
+  
+  # -------------------------
+  # Stage 2: Migrate Staging DB
+  # -------------------------
+  - stage: MigrateStaging
+    displayName: 'Migrate Staging Database'
+    dependsOn: Build_Test_Publish
+    condition: succeeded()
+    variables:
+      - group: vg-staging
+    jobs:
+      - job: MigratingStagingJob
+        displayName: 'Run staging migration'
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - task: UseDotNet@2
+            displayName: 'Use .NET SDK'
+            inputs:
+              packageType: 'sdk'
+              useGlobalJson: true
+          
+          # OPTION A (your current working approach): run migrations via dotnet run
+          # For this, you need source code available (checkout provides it).
+          - task: DotNetCoreCLI@2
+            displayName: 'Run EF migrations (staging)'
+            inputs:
+              command: 'run'
+              projects: 'InClass/src/InClass.Api/InClass.Api.csproj'
+              arguments: '--configuration $(buildConfiguration) --no-launch-profile -- --migrate'
+            env:
+              ConnectionStrings__Default: $(ConnectionStrings--Default)
+  
+  # -------------------------
+  # Stage 3: Deploy to Staging App Service
+  # -------------------------
+  - stage: DeployStaging
+    displayName: 'Deploy to Staging App Service'
+    dependsOn: MigrateStaging
+    condition: succeeded()
+    variables:
+      - group: vg-staging
+    jobs:
+      - deployment: DeployStagingWeb
+        displayName: 'Deploy (staging)'
+        environment: 'staging'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: DownloadPipelineArtifact@2
+                  displayName: 'Download artifact'
+                  inputs:
+                    artifactName: 'drop'
+                    targetPath: '$(Pipeline.Workspace)/drop'
+                
+                # Deploy zip to App Service
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to Azure App Service (staging)'
+                  inputs:
+                    appType: 'webApp'
+                    azureSubscription: '$(azureServiceConnection)'
+                    appName: '$(webAppStaging)'
+                    package: '$(Pipeline.Workspace)/drop/**/*.zip'
+                    appSettings: >-
+                      -ConnectionStrings__Default "$(ConnectionStrings--Default)"
