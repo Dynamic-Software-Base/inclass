@@ -40,7 +40,7 @@ stages:
             parameters:
               solution: '**/*.sln'
               buildConfiguration: '$(buildConfiguration)'
-              testProjects: 'InClass/tests/**/*.csproj'
+              testProjects: 'tests/**/*.csproj'
 
           - template: ../templates/dotnet-publish-artifact.yml
             parameters:
@@ -76,7 +76,7 @@ stages:
             displayName: 'Run EF migrations (staging)'
             inputs:
               command: 'run'
-              projects: 'InClass/src/InClass.Api/InClass.Api.csproj'
+              projects: 'src/InClass.Api/InClass.Api.csproj'
               arguments: '--configuration $(buildConfiguration) --no-launch-profile -- --migrate'
             env:
               ConnectionStrings__Default: $(ConnectionStrings--Default)
