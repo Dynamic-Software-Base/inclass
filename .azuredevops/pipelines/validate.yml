@@ -14,9 +14,6 @@ pr:
       - InClass/src/**
       - InClass/tests/**
       - .azuredevops/**
-    exclude:
-      - docs/**
-      - README.md
 
 pool:
   name: 'Default'
@@ -37,4 +34,4 @@ stages:
             parameters:
               solution: '**/*.sln'
               buildConfiguration: '$(buildConfiguration)'
-              testProjects: 'solution/tests/**/*.csproj'
+              testProjects: 'InClass/tests/**/*.csproj'
