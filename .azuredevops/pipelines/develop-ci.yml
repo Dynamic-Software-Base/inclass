@@ -1,0 +1,34 @@
+name: develop_ci_$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - develop
+  paths:
+    include:
+      - InClass/src/**
+      - InClass/tests/**
+      - .azuredevops/**
+
+pr: none
+
+pool:
+  name: 'Default'
+
+variables:
+  buildConfiguration: 'Release'
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+
+stages:
+  - stage: Build_Test
+    displayName: 'Build and Test'
+    jobs:
+      - job: CI
+        displayName: 'CI'
+        steps:
+          - template: ../templates/dotnet-restore-build-test.yml
+            parameters:
+              solution: '**/*.sln'
+              buildConfiguration: '$(buildConfiguration)'
+              testProjects: 'InClass/tests/**/*.csproj'
