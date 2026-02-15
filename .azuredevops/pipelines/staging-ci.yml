@@ -6,8 +6,8 @@ trigger:
       - staging
   paths:
     include:
-      - solution/src/**
-      - solution/tests/**
+      - InClass/src/**
+      - InClass/tests/**
       - .azuredevops/**
 
 pr: none
@@ -40,11 +40,11 @@ stages:
             parameters:
               solution: '**/*.sln'
               buildConfiguration: '$(buildConfiguration)'
-              testProjects: 'solution/tests/**/*.csproj'
+              testProjects: 'InClass/tests/**/*.csproj'
 
           - template: ../templates/dotnet-publish-artifact.yml
             parameters:
-              apiProject: 'solution/src/InClass.Api/InClass.Api.csproj'  # set exact path
+              apiProject: 'InClass/src/InClass.Api/InClass.Api.csproj'  # set exact path
               buildConfiguration: '$(buildConfiguration)'
               artifactName: 'drop'
   
@@ -76,7 +76,7 @@ stages:
             displayName: 'Run EF migrations (staging)'
             inputs:
               command: 'run'
-              projects: 'solution/src/InClass.Api/InClass.Api.csproj'
+              projects: 'InClass/src/InClass.Api/InClass.Api.csproj'
               arguments: '--configuration $(buildConfiguration) --no-launch-profile -- --migrate'
             env:
               ConnectionStrings__Default: $(ConnectionStrings--Default)
@@ -112,15 +112,5 @@ stages:
                     azureSubscription: '$(azureServiceConnection)'
                     appName: '$(webAppStaging)'
                     package: '$(Pipeline.Workspace)/drop/**/*.zip'
-              
-              # Optional: apply app settings/connection strings during deploy
-              # If you store these in Key Vault and expose via variable group, you can set them here.
-              # - task: AzureAppServiceSettings@1
-              #   displayName: 'Apply App Settings (staging)'
-              #   inputs:
-              #     azureSubscription: '$(azureServiceConnection)'
-              #     appName: '$(webAppStaging)'
-              #     appSettings: |
-              #       [
-              #         { "name": "ASPNETCORE_ENVIRONMENT", "value": "Staging", "slotSetting": false }
-              #       ]
+                    appSettings: >-
+                      -ConnectionStrings__Default "$(ConnectionStrings--Default)"
