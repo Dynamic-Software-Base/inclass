@@ -7,7 +7,7 @@ parameters:
     default: 'Release'
   - name: testProjects
     type: string
-    default: 'InClass/tests/**/*.csproj'
+    default: 'tests/**/*.csproj'
 
 
 steps:
@@ -41,18 +41,16 @@ steps:
       arguments: >
         --configuration ${{parameters.buildConfiguration}}
         --no-build
-        --logger trx
         --collect "XPlat Code Coverage"
-        --results-directory $(Agent.TempDirectory)/TestResults
 
   - task: PublishTestResults@2
     displayName: 'Publish test results'
     inputs:
       testResultsFormat: 'VSTest'
-      testResultsFiles: '$(Agent.TempDirectory)/TestResults/**/*.trx'
+      testResultsFiles: '$(Agent.TempDirectory)/**/*.trx'   # no /TestResults subfolder
       failTaskOnFailedTests: true
 
   - task: PublishCodeCoverageResults@2
     displayName: 'Publish coverage'
     inputs:
-      summaryFileLocation: '$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml' 
+      summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml' 

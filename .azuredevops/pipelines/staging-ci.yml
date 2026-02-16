@@ -6,14 +6,14 @@ trigger:
       - staging
   paths:
     include:
-      - InClass/src/**
-      - InClass/tests/**
+      - src/**
+      - tests/**
       - .azuredevops/**
 
 pr: none
 
 pool:
-  name: 'default'   # your self-hosted agent pool
+  name: 'Default'
 
 variables:
   buildConfiguration: 'Release'
@@ -40,11 +40,11 @@ stages:
             parameters:
               solution: '**/*.sln'
               buildConfiguration: '$(buildConfiguration)'
-              testProjects: 'InClass/tests/**/*.csproj'
+              testProjects: 'tests/**/*.csproj'
 
           - template: ../templates/dotnet-publish-artifact.yml
             parameters:
-              apiProject: 'InClass/src/InClass.Api/InClass.Api.csproj'  # set exact path
+              apiProject: 'src/InClass.Api/InClass.Api.csproj'  # set exact path
               buildConfiguration: '$(buildConfiguration)'
               artifactName: 'drop'
   
@@ -69,15 +69,19 @@ stages:
             inputs:
               packageType: 'sdk'
               useGlobalJson: true
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Restore (for migration)'
+            inputs:
+              command: 'restore'
+              projects: 'src/InClass.Api/InClass.Api.csproj'
           
-          # OPTION A (your current working approach): run migrations via dotnet run
-          # For this, you need source code available (checkout provides it).
           - task: DotNetCoreCLI@2
             displayName: 'Run EF migrations (staging)'
             inputs:
               command: 'run'
               projects: 'src/InClass.Api/InClass.Api.csproj'
-              arguments: '--configuration $(buildConfiguration) --no-launch-profile -- --migrate'
+              arguments: '--configuration $(buildConfiguration) -- --migrate'
             env:
               ConnectionStrings__Default: $(ConnectionStrings--Default)
   
