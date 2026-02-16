@@ -1,7 +1,7 @@
 parameters:
   - name: apiProject
     type: string
-    default: 'src/InClass.Api/InClass.Api.csproj'   # change if your API project name differs
+    default: 'src/InClass.Api/InClass.Api.csproj'  
   - name: buildConfiguration
     type: string
     default: 'Release'
