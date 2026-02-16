@@ -1,0 +1,36 @@
+parameters:
+  - name: status
+    type: string
+  - name: stageName
+    type: string
+    default: ''
+
+steps:
+  - task: PowerShell@2
+    displayName: 'Notify Slack'
+    condition: always()
+    inputs:
+      targetType: 'inline'
+      script: |
+        $emoji = if ("${{ parameters.status }}" -eq "succeeded") { ":white_check_mark:" } else { ":x:" }
+        $color = if ("${{ parameters.status }}" -eq "succeeded") { "good" } else { "danger" }
+
+        $body = @{
+          attachments = @(@{
+            color    = $color
+            title    = "$emoji Pipeline ${{ parameters.status }} - ${{ parameters.stageName }}"
+            fields   = @(
+              @{ title = "Branch";       value = "$(Build.SourceBranchName)"; short = $true }
+              @{ title = "Triggered by"; value = "$(Build.RequestedFor)";     short = $true }
+              @{ title = "Build";        value = "$(Build.BuildNumber)";      short = $true }
+              @{ title = "Pipeline";     value = "$(Build.DefinitionName)";   short = $true }
+            )
+            actions  = @(@{
+              type  = "button"
+              text  = "View Pipeline"
+              url   = "$(System.TeamFoundationCollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)"
+            })
+          })
+        } | ConvertTo-Json -Depth 10
+
+        Invoke-RestMethod -Uri "$(SLACK_WEBHOOK_URL)" -Method Post -Body $body -ContentType 'application/json'
