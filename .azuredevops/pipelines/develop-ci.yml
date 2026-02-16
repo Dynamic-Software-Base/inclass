@@ -32,3 +32,15 @@ stages:
               solution: '**/*.sln'
               buildConfiguration: '$(buildConfiguration)'
               testProjects: 'tests/**/*.csproj'
+      - job: Notify
+          displayName: 'Notify'
+          dependsOn: CI
+          condition: always()          # run even if CI failed
+          variables:
+            - group: vg-general        # where your webhook URL lives
+            ciResult: $[ dependencies.CI.result ]
+          steps:
+            - template: ../templates/notify-slack.yml   # or notify-teams.yml
+              parameters:
+                stageName: 'Build and Test (develop)'
+                status: $[ dependencies.CI.result ]     # 'succeeded', 'failed', 'canceled
