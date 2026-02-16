@@ -84,6 +84,17 @@ stages:
               arguments: '--configuration $(buildConfiguration) -- --migrate'
             env:
               ConnectionStrings__Default: $(ConnectionStrings--Default)
+      - job: Notify
+        displayName: 'Notify migration result'
+        dependsOn: MigratingStagingJob
+        condition: always()
+        variables:
+          - group: vg-general
+        steps:
+          - template: ../templates/notify-slack.yml
+            parameters:
+              stageName: 'Migrate Staging DB'
+              status: $[ dependencies.MigratingStagingJob.result ]
   
   # -------------------------
   # Stage 3: Deploy to Staging App Service
@@ -94,6 +105,7 @@ stages:
     condition: succeeded()
     variables:
       - group: vg-staging
+      - group: vg-general
     jobs:
       - deployment: DeployStagingWeb
         displayName: 'Deploy (staging)'
@@ -118,3 +130,12 @@ stages:
                     package: '$(Pipeline.Workspace)/drop/**/*.zip'
                     appSettings: >-
                       -ConnectionStrings__Default "$(ConnectionStrings--Default)"
+      - job: Notify
+        displayName: 'Notify deployment result'
+        dependsOn: DeployStagingWeb
+        condition: always()
+        steps:
+          - template: ../templates/notify-slack.yml
+            parameters:
+              stageName: 'Deploy to Staging'
+              status: $[ dependencies.DeployStagingWeb.result ]
