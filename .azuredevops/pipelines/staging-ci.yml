@@ -85,16 +85,18 @@ stages:
             env:
               ConnectionStrings__Default: $(ConnectionStrings--Default)
       - job: Notify
-        displayName: 'Notify migration result'
-        dependsOn: MigratingStagingJob
+        displayName: 'Notify Db Migration'
+        dependsOn: CI
         condition: always()
         variables:
           - group: vg-general
+          - name: ciResult
+            value: $[ dependencies.CI.result ]
         steps:
           - template: ../templates/notify-slack.yml
             parameters:
-              stageName: 'Migrate Staging DB'
-              status: $[ dependencies.MigratingStagingJob.result ]
+              stageName: 'Migrate to DB'
+              status: '$(ciResult)'
   
   # -------------------------
   # Stage 3: Deploy to Staging App Service
@@ -131,11 +133,15 @@ stages:
                     appSettings: >-
                       -ConnectionStrings__Default "$(ConnectionStrings--Default)"
       - job: Notify
-        displayName: 'Notify deployment result'
-        dependsOn: DeployStagingWeb
+        displayName: 'Notify Deploy result '
+        dependsOn: CI
         condition: always()
+        variables:
+          - group: vg-general
+          - name: ciResult
+            value: $[ dependencies.CI.result ]
         steps:
           - template: ../templates/notify-slack.yml
             parameters:
-              stageName: 'Deploy to Staging'
-              status: $[ dependencies.DeployStagingWeb.result ]
+              stageName: 'Deploy to staging'
+              status: '$(ciResult)'
