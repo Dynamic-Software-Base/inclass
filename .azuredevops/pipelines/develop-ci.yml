@@ -6,9 +6,9 @@ trigger:
       - develop
   paths:
     include:
-      - InClass/src/**
-      - InClass/tests/**
-      - InClass/.azuredevops/**
+      - src/**
+      - tests/**
+      - .azuredevops/**
 
 pr: none
 
