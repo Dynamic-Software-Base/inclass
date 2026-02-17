@@ -1,0 +1,10 @@
+# Environment files with secrets
+.env
+
+# Local development data
+data/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
