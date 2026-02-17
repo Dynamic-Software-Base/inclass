@@ -1,0 +1,39 @@
+# ================================
+# InClass Keycloak - Staging Image
+# ================================
+FROM quay.io/keycloak/keycloak:26.5 AS builder
+
+# Enable health and metrics
+ENV KC_HEALTH_ENABLED=true
+ENV KC_METRICS_ENABLED=true
+ENV KC_DB=postgres
+
+# Build optimized Keycloak
+RUN /opt/keycloak/bin/kc.sh build
+
+# ================================
+# Final Image
+# ================================
+FROM quay.io/keycloak/keycloak:26.5
+
+# Copy optimized build from builder stage
+COPY --from=builder /opt/keycloak/ /opt/keycloak/
+
+# Copy realm configuration
+# This will auto-import on first startup
+COPY realm-export.json /opt/keycloak/data/import/realm-export.json
+
+# Environment variables (values injected at runtime via Railway)
+ENV KC_DB=postgres
+ENV KC_HEALTH_ENABLED=true
+ENV KC_METRICS_ENABLED=true
+ENV KC_PROXY_HEADERS=xforwarded
+ENV KC_HTTP_ENABLED=true
+ENV KC_HOSTNAME_STRICT=false
+
+EXPOSE 8080
+
+ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
+
+# start with realm import on first run
+CMD ["start", "--import-realm"]
