@@ -1,5 +1,6 @@
 using System.Text;
 using Application.Abstractions.Authentication;
+using Application.Abstractions.Authorization;
 using Application.Abstractions.Data;
 using Infrastructure.Authentication;
 using Infrastructure.Authentication.Services;
@@ -35,7 +36,7 @@ public static class DependencyInjection
     private static IServiceCollection AddServices(this IServiceCollection services)
     {
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
-        
+        services.AddScoped<ISchoolAccessService, SchoolAccessService>();
 
         return services;
     }
