@@ -1,4 +1,7 @@
-﻿using Application.Abstractions.Data;
+using Application.Abstractions.Data;
+using Domain.Invitations;
+using Domain.Schools;
+using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -8,6 +11,11 @@ public sealed class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options) : DbContext(options), IUnitOfWork
 {
     private IDbContextTransaction? _currentTransaction;
+
+    public DbSet<User> Users => Set<User>();
+    public DbSet<School> Schools => Set<School>();
+    public DbSet<UserSchoolMembership> UserSchoolMemberships => Set<UserSchoolMembership>();
+    public DbSet<Invitation> Invitations => Set<Invitation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -56,7 +64,7 @@ public sealed class ApplicationDbContext(
 
         _currentTransaction = await Database.BeginTransactionAsync(cancellationToken);
     }
-    public async  Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
+    public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
     {
         if (_currentTransaction is not null)
         {
