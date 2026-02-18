@@ -1,20 +1,13 @@
 ﻿using Application.Abstractions.Data;
-using Domain.Todos;
-using Domain.Users;
-using Infrastructure.DomainEvents;
 using Microsoft.EntityFrameworkCore;
-using SharedKernel;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Infrastructure.Database;
 
 public sealed class ApplicationDbContext(
-    DbContextOptions<ApplicationDbContext> options,
-    IDomainEventsDispatcher domainEventsDispatcher)
-    : DbContext(options), IApplicationDbContext
+    DbContextOptions<ApplicationDbContext> options) : DbContext(options), IUnitOfWork
 {
-    public DbSet<User> Users { get; set; }
-
-    public DbSet<TodoItem> TodoItems { get; set; }
+    private IDbContextTransaction? _currentTransaction;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,38 +18,51 @@ public sealed class ApplicationDbContext(
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        // When should you publish domain events?
-        //
-        // 1. BEFORE calling SaveChangesAsync
-        //     - domain events are part of the same transaction
-        //     - immediate consistency
-        // 2. AFTER calling SaveChangesAsync
-        //     - domain events are a separate transaction
-        //     - eventual consistency
-        //     - handlers can fail
 
         int result = await base.SaveChangesAsync(cancellationToken);
 
-        await PublishDomainEventsAsync();
 
         return result;
     }
-
-    private async Task PublishDomainEventsAsync()
+    public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
     {
-        var domainEvents = ChangeTracker
-            .Entries<Entity>()
-            .Select(entry => entry.Entity)
-            .SelectMany(entity =>
+        try
+        {
+            await SaveChangesAsync(cancellationToken);
+            if (_currentTransaction is not null)
             {
-                List<IDomainEvent> domainEvents = entity.DomainEvents;
+                await _currentTransaction.CommitAsync(cancellationToken);
+            }
+        }
+        catch (Exception)
+        {
+            await RollbackTransactionAsync(cancellationToken);
+            throw;
+        }
+        finally
+        {
+            _currentTransaction?.Dispose();
+            _currentTransaction = null;
+        }
+    }
 
-                entity.ClearDomainEvents();
+    public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        if (_currentTransaction is not null)
+        {
+            throw new InvalidOperationException("A transaction is already in progress.");
+        }
 
-                return domainEvents;
-            })
-            .ToList();
 
-        await domainEventsDispatcher.DispatchAsync(domainEvents);
+        _currentTransaction = await Database.BeginTransactionAsync(cancellationToken);
+    }
+    public async  Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        if (_currentTransaction is not null)
+        {
+            await _currentTransaction.RollbackAsync(cancellationToken);
+            _currentTransaction.Dispose();
+            _currentTransaction = null;
+        }
     }
 }

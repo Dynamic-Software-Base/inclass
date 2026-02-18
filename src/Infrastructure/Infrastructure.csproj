@@ -3,6 +3,8 @@
   <ItemGroup>
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
     <PackageReference Include="EFCore.NamingConventions" />
+    <PackageReference Include="Keycloak.AuthServices.Authentication" />
+    <PackageReference Include="Keycloak.AuthServices.Sdk" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
     <PackageReference Include="Newtonsoft.Json" />
@@ -15,6 +17,10 @@
 
   <ItemGroup>
 	<InternalsVisibleTo Include="ArchitectureTests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="DomainEvents\" />
   </ItemGroup>
 
 </Project>

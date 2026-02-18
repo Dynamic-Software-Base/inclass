@@ -12,17 +12,27 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, loggerConfig) => loggerConfig.ReadFrom.Configuration(context.Configuration));
 
 builder.Services.AddSwaggerGenWithAuth();
-
+builder.Services.AddControllers();
 builder.Services
     .AddApplication()
     .AddPresentation()
     .AddInfrastructure(builder.Configuration);
 
-builder.Services.AddEndpoints(Assembly.GetExecutingAssembly());
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("BFF", policy =>
+    {
+        policy
+            .WithOrigins(builder.Configuration["AllowedCorsOrigins"]!)
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
+    });
+});
 
 WebApplication app = builder.Build();
 
-app.MapEndpoints();
 
 if (app.Environment.IsDevelopment())
 {
@@ -45,6 +55,8 @@ app.UseRequestContextLogging();
 app.UseSerilogRequestLogging();
 
 app.UseExceptionHandler();
+
+app.UseCors("BFF");
 
 app.UseAuthentication();
 
