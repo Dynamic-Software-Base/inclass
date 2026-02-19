@@ -1,5 +1,6 @@
 using System.Reflection;
 using Application;
+using Application.Abstractions.Authentication;
 using HealthChecks.UI.Client;
 using Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -61,7 +62,16 @@ app.UseCors("BFF");
 app.UseAuthentication();
 
 app.UseAuthorization();
+app.Use(async (context, next) =>
+{
+    if (context.User?.Identity?.IsAuthenticated == true)
+    {
+        IEnsureLocalUserService provisioner = context.RequestServices.GetRequiredService<IEnsureLocalUserService>();
+        await provisioner.EnsureLocalUserAsync(context.RequestAborted);
+    }
 
+    await next();
+});
 // REMARK: If you want to use Controllers, you'll need this.
 app.MapControllers();
 

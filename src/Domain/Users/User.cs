@@ -8,7 +8,6 @@ namespace Domain.Users;
 
 public sealed class User : AggregateRoot<User, UserId>
 {
-    public string KeycloakUserId { get; private set; } = string.Empty;
     public string? Email { get; private set; }
     public string? PhoneNumber { get; private set; }
     public string FullName { get; private set; } = string.Empty;
@@ -21,13 +20,11 @@ public sealed class User : AggregateRoot<User, UserId>
     private User(
         UserId id,
         UserId createdBy,
-        string keycloakUserId,
         string fullName,
         string? email,
         string? phoneNumber,
         bool isActive) : base(id, createdBy)
     {
-        KeycloakUserId = NormalizeRequired(keycloakUserId);
         FullName = NormalizeRequired(fullName);
         Email = ContactTargetNormalizer.NormalizeOptionalEmail(email);
         PhoneNumber = ContactTargetNormalizer.NormalizeOptionalPhoneNumber(phoneNumber);
@@ -37,17 +34,15 @@ public sealed class User : AggregateRoot<User, UserId>
     public static User Create(
         UserId id,
         UserId createdBy,
-        string keycloakUserId,
         string fullName,
         string? email = null,
         string? phoneNumber = null,
         bool isActive = true)
     {
-        User user = new(id, createdBy, keycloakUserId, fullName, email, phoneNumber, isActive);
+        User user = new(id, createdBy, fullName, email, phoneNumber, isActive);
 
         user.RaiseDomainEvent(new UserCreatedDomainEvent(
             user.Id,
-            user.KeycloakUserId,
             user.FullName,
             user.Email,
             user.PhoneNumber,

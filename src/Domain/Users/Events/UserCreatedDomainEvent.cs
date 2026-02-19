@@ -5,7 +5,6 @@ namespace Domain.Users.Events;
 
 public sealed record UserCreatedDomainEvent(
     UserId UserId,
-    string KeycloakUserId,
     string FullName,
     string? Email,
     string? PhoneNumber,

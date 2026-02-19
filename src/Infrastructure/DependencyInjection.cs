@@ -37,7 +37,7 @@ public static class DependencyInjection
     {
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddScoped<ISchoolAccessService, SchoolAccessService>();
-
+        services.AddScoped<IEnsureLocalUserService,EnsureLocalUser>();
         return services;
     }
 

@@ -29,10 +29,6 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
                 userId => userId.Value,
                 value => UserId.From(value));
 
-        builder.Property(user => user.KeycloakUserId)
-            .IsRequired()
-            .HasMaxLength(128);
-
         builder.Property(user => user.Email)
             .HasMaxLength(320);
 
@@ -46,11 +42,8 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(user => user.IsActive)
             .IsRequired();
 
-        builder.HasIndex(user => user.Email)
-            .IsUnique();
-
-        builder.HasIndex(user => user.PhoneNumber)
-            .IsUnique();
+        builder.HasIndex(user => user.Email).IsUnique();
+        builder.HasIndex(user => user.PhoneNumber).IsUnique();
 
         builder.Ignore(user => user.DomainEvents);
     }

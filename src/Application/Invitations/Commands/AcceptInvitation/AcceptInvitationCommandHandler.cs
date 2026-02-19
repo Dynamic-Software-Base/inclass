@@ -116,6 +116,6 @@ public sealed class AcceptInvitationCommandHandler(
 
         return await unitOfWork
             .Set<User>()
-            .FirstOrDefaultAsync(x => x.KeycloakUserId == keycloakUserId, cancellationToken);
+            .FirstOrDefaultAsync(x => x.Id == UserId.From(keycloakUserId), cancellationToken);
     }
 }
