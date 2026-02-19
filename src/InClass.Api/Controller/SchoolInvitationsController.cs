@@ -1,6 +1,7 @@
 using Application.Invitations.Commands.GenerateInvitation;
 using Application.Invitations.Contracts;
 using ErrorOr;
+using Infrastructure.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,7 @@ public sealed class SchoolInvitationsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize]
+    [Authorize(Policy = SchoolPolicies.OwnerOrAdmin)]
     public async Task<IActionResult> GenerateInvitation(
         Guid schoolId,
         [FromBody] GenerateInvitationRequest request,

@@ -1,4 +1,3 @@
-using Application.Abstractions.Authorization;
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Invitations.Common;
@@ -8,15 +7,13 @@ using Domain.Schools;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
-using SharedKernel.Enums;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 
 namespace Application.Invitations.Commands.GenerateInvitation;
 
 public sealed class GenerateInvitationCommandHandler(
     IUnitOfWork unitOfWork,
-    ICurrentUserService currentUserService,
-    ISchoolAccessService schoolAccessService)
+    ICurrentUserService currentUserService)
     : IRequestHandler<GenerateInvitationCommand, ErrorOr<GenerateInvitationResponse>>
 {
     public async Task<ErrorOr<GenerateInvitationResponse>> Handle(
@@ -24,10 +21,6 @@ public sealed class GenerateInvitationCommandHandler(
         CancellationToken cancellationToken)
     {
         ICurrentUser currentUser = currentUserService.GetCurrentUser();
-        if (!currentUser.IsAuthenticated)
-        {
-            return Error.Unauthorized("Invitation.Generate.Unauthorized", "Authentication is required to generate invitations.");
-        }
 
         if (string.IsNullOrWhiteSpace(request.TargetValue))
         {
@@ -42,19 +35,6 @@ public sealed class GenerateInvitationCommandHandler(
         if (!schoolExists)
         {
             return Error.NotFound("Invitation.Generate.SchoolNotFound", "School was not found.");
-        }
-
-        bool canManageInvitations = await schoolAccessService.HasAnyRoleAsync(
-            currentUser.Id,
-            request.SchoolId,
-            [UserRole.SchoolOwner, UserRole.SchoolAdministrator],
-            cancellationToken);
-
-        if (!canManageInvitations)
-        {
-            return Error.Forbidden(
-                "Invitation.Generate.Forbidden",
-                "You are not allowed to generate invitations for this school.");
         }
 
         string rawToken = InvitationTokenHasher.GenerateRawToken();

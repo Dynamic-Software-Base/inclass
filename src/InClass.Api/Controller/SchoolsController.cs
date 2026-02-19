@@ -2,6 +2,7 @@ using Application.Schools.Commands.CreateSchool;
 using Application.Schools.Contracts;
 using Application.Schools.Queries.GetSchoolMembers;
 using ErrorOr;
+using Infrastructure.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -38,7 +39,7 @@ public sealed class SchoolsController : ControllerBase
     }
 
     [HttpGet("{schoolId:guid}/members")]
-    [Authorize]
+    [Authorize(Policy = SchoolPolicies.OwnerOrAdmin)]
     public async Task<IActionResult> GetMembers(
         Guid schoolId,
         CancellationToken cancellationToken)

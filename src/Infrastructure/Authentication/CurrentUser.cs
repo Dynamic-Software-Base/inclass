@@ -8,7 +8,7 @@ public sealed class CurrentUser : ICurrentUser
 {
 
     public static readonly CurrentUser Anonymous = new(
-        UserId.From(Guid.NewGuid()),
+        UserId.From(Guid.Empty),
         string.Empty,
         "Anonymous",
         []

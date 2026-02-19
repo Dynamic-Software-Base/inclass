@@ -17,6 +17,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using SharedKernel;
+using SharedKernel.Enums;
 
 namespace Infrastructure;
 
@@ -36,8 +37,7 @@ public static class DependencyInjection
     private static IServiceCollection AddServices(this IServiceCollection services)
     {
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
-        services.AddScoped<ISchoolAccessService, SchoolAccessService>();
-        services.AddScoped<IEnsureLocalUserService,EnsureLocalUser>();
+        services.AddScoped<IEnsureLocalUserService, EnsureLocalUser>();
         return services;
     }
 
@@ -134,10 +134,38 @@ public static class DependencyInjection
 
     private static IServiceCollection AddAuthorizationInternal(this IServiceCollection services)
     {
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(
+                SchoolPolicies.OwnerOnly,
+                policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.Requirements.Add(new SchoolRoleRequirement(UserRole.SchoolOwner));
+                });
 
+            options.AddPolicy(
+                SchoolPolicies.OwnerOrAdmin,
+                policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.Requirements.Add(
+                        new SchoolRoleRequirement(UserRole.SchoolOwner, UserRole.SchoolAdministrator));
+                });
+
+            options.AddPolicy(
+                SchoolPolicies.TeacherOnly,
+                policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.Requirements.Add(new SchoolRoleRequirement(UserRole.Teacher));
+                });
+        });
+
+        services.AddScoped<ISchoolAccessService, SchoolAccessService>();
         services.AddScoped<PermissionProvider>();
 
+        services.AddScoped<IAuthorizationHandler, SchoolRoleAuthorizationHandler>();
         services.AddTransient<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
         services.AddTransient<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();

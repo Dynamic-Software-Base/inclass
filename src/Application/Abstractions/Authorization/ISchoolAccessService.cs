@@ -8,6 +8,16 @@ public interface ISchoolAccessService
     Task<bool> HasAnyRoleAsync(
         UserId userId,
         SchoolId schoolId,
-        IReadOnlyCollection<UserRole> roles,
+        params UserRole[] roles);
+
+    Task<bool> HasAnyRoleAsync(
+        UserId userId,
+        SchoolId schoolId,
+        UserRole[] roles,
+        CancellationToken cancellationToken);
+
+    Task<List<UserRole>> GetRolesAsync(
+        UserId userId,
+        SchoolId schoolId,
         CancellationToken cancellationToken = default);
 }
