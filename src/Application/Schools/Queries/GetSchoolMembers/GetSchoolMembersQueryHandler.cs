@@ -40,7 +40,7 @@ public sealed class GetSchoolMembersQueryHandler(
         {
             return Error.Forbidden(
                 "School.Members.Forbidden",
-                "You are not allowed to view members for this school.");
+                $"You are not allowed to view members for this school.");
         }
 
         var membershipRows = await unitOfWork

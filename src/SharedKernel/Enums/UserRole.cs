@@ -2,11 +2,11 @@
 
 public enum UserRole
 {
-    PlatformAdmin,
-    SchoolOwner,
-    SchoolAdministrator,
-    Teacher,
-    Student,
-    Parent,
+    PlatformAdmin = 0,
+    SchoolOwner  = 1,
+    SchoolAdministrator =2,
+    Teacher = 3,
+    Student = 4,
+    Parent = 5,
 
 }
