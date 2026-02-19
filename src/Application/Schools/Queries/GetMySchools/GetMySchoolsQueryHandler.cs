@@ -44,7 +44,7 @@ public sealed class GetMySchoolsQueryHandler(
         var schools = membershipRows
             .GroupBy(row => new { row.Id, row.Name })
             .Select(group => new MySchoolDto(
-                group.Key.Id.Value,
+                group.Key.Id,
                 group.Key.Name,
                 group.Select(x => x.Role).Distinct().ToList()))
             .OrderBy(x => x.Name)

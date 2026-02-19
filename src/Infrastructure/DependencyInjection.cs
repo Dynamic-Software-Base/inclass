@@ -106,7 +106,7 @@ public static class DependencyInjection
                     RoleClaimType = "roles",
                     ClockSkew = TimeSpan.Zero // No tolerance for expired tokens
                 };
-
+                options.MapInboundClaims = false;
                 options.Events = new JwtBearerEvents
                 {
                     OnAuthenticationFailed = context =>

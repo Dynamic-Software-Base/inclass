@@ -1,3 +1,5 @@
+using SharedKernel.ValueObjects.StronglyTypedIds;
+
 namespace Application.Schools.Contracts;
 
-public sealed record CreateSchoolResponse(Guid SchoolId, string Name);
+public sealed record CreateSchoolResponse(SchoolId SchoolId, string Name);

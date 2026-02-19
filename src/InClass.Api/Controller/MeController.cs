@@ -26,7 +26,12 @@ public sealed class MeController : ControllerBase
         ErrorOr<List<MySchoolDto>> result = await _sender.Send(new GetMySchoolsQuery(), cancellationToken);
 
         return result.Match<IActionResult>(
-            response => Ok(response),
+            response => Ok(response.Select(school => new
+            {
+                schoolId = school.SchoolId.Value,
+                name = school.Name,
+                roles = school.Roles
+            })),
             errors => this.ToProblem(errors));
     }
 }

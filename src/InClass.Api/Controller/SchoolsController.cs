@@ -31,7 +31,9 @@ public sealed class SchoolsController : ControllerBase
             await _sender.Send(new CreateSchoolCommand(request.Name), cancellationToken);
 
         return result.Match<IActionResult>(
-            response => Created($"/api/schools/{response.SchoolId}", response),
+            response => Created(
+                $"/api/schools/{response.SchoolId.Value}",
+                new { schoolId = response.SchoolId.Value, name = response.Name }),
             errors => this.ToProblem(errors));
     }
 

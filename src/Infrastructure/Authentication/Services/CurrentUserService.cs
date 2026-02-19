@@ -30,15 +30,11 @@ public class CurrentUserService : ICurrentUserService
             return CurrentUser.Anonymous;
         }
 
-        string id = user.FindFirstValue(ClaimTypes.NameIdentifier);
-        string email = user.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+        string id = user.FindFirstValue("sub");
+        string email = user.FindFirstValue("email") ?? string.Empty;
+        var roleClaims = user.FindAll("roles").Select(c => c.Value).ToList();
         string name = user.FindFirstValue("name")
-                      ?? $"{user.FindFirstValue("given_name")} {user.FindFirstValue("family_name")}";
-
-        var roleClaims = user.FindAll(ClaimTypes.Role).
-            Select(c => c.Value)
-            .ToList();
-
+                      ?? $"{user.FindFirstValue("given_name")} {user.FindFirstValue("family_name")}".Trim();
         List<UserRole> roles = MapRoles(roleClaims);
         _currentUser = new CurrentUser(
             UserId.From(id!),

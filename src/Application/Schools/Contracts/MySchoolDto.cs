@@ -1,8 +1,9 @@
 using SharedKernel.Enums;
+using SharedKernel.ValueObjects.StronglyTypedIds;
 
 namespace Application.Schools.Contracts;
 
 public sealed record MySchoolDto(
-    Guid SchoolId,
+    SchoolId SchoolId,
     string Name,
     List<UserRole> Roles);

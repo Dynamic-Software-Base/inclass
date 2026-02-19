@@ -39,8 +39,8 @@ public class AuthTestController : ControllerBase
         });
     }
 
-    [HttpGet("school-owner-only")]
-    [Authorize(Roles = "school_owner")]
+[HttpGet("school-owner-only")]
+[Authorize(Roles = "school_owner")]
 #pragma warning disable S6968
     public IActionResult SchoolOwnerOnly()
 #pragma warning restore S6968

@@ -14,6 +14,7 @@ public sealed class CreateSchoolCommandHandler(
     ICurrentUserService currentUserService)
     : IRequestHandler<CreateSchoolCommand, ErrorOr<CreateSchoolResponse>>
 {
+    private const int MinSchoolNameLength = 2;
     private const int MaxSchoolNameLength = 200;
 
     public async Task<ErrorOr<CreateSchoolResponse>> Handle(
@@ -30,6 +31,13 @@ public sealed class CreateSchoolCommandHandler(
         if (string.IsNullOrWhiteSpace(name))
         {
             return Error.Validation("School.Create.Name.Required", "School name is required.");
+        }
+
+        if (name.Length < MinSchoolNameLength)
+        {
+            return Error.Validation(
+                "School.Create.Name.MinLength",
+                $"School name must be at least {MinSchoolNameLength} characters.");
         }
 
         if (name.Length > MaxSchoolNameLength)
@@ -62,6 +70,6 @@ public sealed class CreateSchoolCommandHandler(
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new CreateSchoolResponse(school.Id.Value, school.Name);
+        return new CreateSchoolResponse(school.Id, school.Name);
     }
 }
