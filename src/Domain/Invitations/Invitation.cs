@@ -52,6 +52,9 @@ public sealed class Invitation : AggregateRoot<Invitation, InvitationId>
         DateTimeOffset expiresAt) =>
         new(id, createdBy, schoolId, role, targetType, targetValue, tokenHash, expiresAt);
 
+    public static string NormalizeTargetValue(InvitationTargetType targetType, string targetValue) =>
+        ContactTargetNormalizer.Normalize(targetType, targetValue);
+
     public bool IsExpired(DateTimeOffset now) => now >= ExpiresAt;
 
     public void Accept(User user, DateTimeOffset now)
@@ -73,27 +76,52 @@ public sealed class Invitation : AggregateRoot<Invitation, InvitationId>
         SetUpdated(now, user.Id);
     }
 
-    public void Revoke(DateTimeOffset now)
+    public void Revoke(DateTimeOffset now, UserId revokedBy)
     {
         if (Status == InvitationStatus.Accepted)
         {
             throw new InvalidOperationException("Accepted invitations cannot be revoked.");
         }
 
-        if (Status == InvitationStatus.Revoked || Status == InvitationStatus.Expired)
+        if (Status == InvitationStatus.Revoked)
         {
-            return;
-        }
-
-        if (IsExpired(now))
-        {
-            Status = InvitationStatus.Expired;
-            SetUpdated(now, CreatedBy);
             return;
         }
 
         Status = InvitationStatus.Revoked;
-        SetUpdated(now, CreatedBy);
+        SetUpdated(now, revokedBy);
+    }
+
+    public void Resend(string tokenHash, DateTimeOffset expiresAt, DateTimeOffset now, UserId resentBy)
+    {
+        if (Status == InvitationStatus.Accepted)
+        {
+            throw new InvalidOperationException("Accepted invitations cannot be resent.");
+        }
+
+        if (Status == InvitationStatus.Revoked)
+        {
+            throw new InvalidOperationException("Revoked invitations cannot be resent.");
+        }
+
+        if (Status == InvitationStatus.Expired)
+        {
+            throw new InvalidOperationException("Expired invitations cannot be resent.");
+        }
+
+        if (Status != InvitationStatus.Pending)
+        {
+            throw new InvalidOperationException("Only pending invitations can be resent.");
+        }
+
+        if (expiresAt <= now)
+        {
+            throw new ArgumentException("Invitation expiration must be in the future.", nameof(expiresAt));
+        }
+
+        TokenHash = NormalizeRequired(tokenHash);
+        ExpiresAt = expiresAt;
+        SetUpdated(now, resentBy);
     }
 
     private void EnsureCanAccept(DateTimeOffset now)
