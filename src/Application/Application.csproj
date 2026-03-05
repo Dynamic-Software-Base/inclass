@@ -2,7 +2,9 @@
 
   <ItemGroup>
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="JetBrains.Annotations" />
     <PackageReference Include="MediatR" />
+    <PackageReference Include="Microsoft.AspNetCore.Http" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="Serilog" />
@@ -16,11 +18,6 @@
 
   <ItemGroup>
 	<InternalsVisibleTo Include="Application.UnitTests" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Abstractions\Behaviors\" />
-    <Folder Include="Abstractions\Messaging\" />
   </ItemGroup>
 
 </Project>

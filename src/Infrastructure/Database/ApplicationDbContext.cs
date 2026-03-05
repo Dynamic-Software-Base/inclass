@@ -1,4 +1,5 @@
 using Application.Abstractions.Data;
+using Domain.File;
 using Domain.Invitations;
 using Domain.Schools;
 using Domain.Users;
@@ -16,7 +17,7 @@ public sealed class ApplicationDbContext(
     public DbSet<School> Schools => Set<School>();
     public DbSet<UserSchoolMembership> UserSchoolMemberships => Set<UserSchoolMembership>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
-
+    public DbSet<StoredFile> StoredFiles => Set<StoredFile>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);

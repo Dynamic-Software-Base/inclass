@@ -1,14 +1,26 @@
 using Domain.Schools.Events;
 using SharedKernel;
+using SharedKernel.ValueObjects;
+using SharedKernel.ValueObjects.Schools;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 
 namespace Domain.Schools;
 
 public sealed class School : AggregateRoot<School, SchoolId>
 {
-    public string Name { get; private set; } = string.Empty;
     public UserId OwnerUserId { get; private set; }
 
+    private readonly List<SchoolPicture> _pictures = [];
+    public string Name { get; private set; } = string.Empty;
+    public string? Ar_Name { get; private set; } = string.Empty;
+    public string? Description { get; private set; } = string.Empty;
+
+    public Address Address { get; private set; }
+    public SchoolContactInfo ContactInfo { get; private set; }
+    public GradeLevelOffering GradeLevels { get; private set; }
+
+    // pictures
+    public IReadOnlyCollection<SchoolPicture> Pictures => _pictures.AsReadOnly();
     private School()
     {
     }
@@ -17,19 +29,38 @@ public sealed class School : AggregateRoot<School, SchoolId>
         SchoolId id,
         UserId createdBy,
         string name,
-        UserId ownerUserId) : base(id, createdBy)
+        string? arabicName,
+        UserId ownerUserId,
+        Address address,
+        SchoolContactInfo contactInfo,
+        GradeLevelOffering gradeLevels,
+        string? description = null) : base(id, createdBy)
     {
-        Name = NormalizeRequired(name);
+        Name = name;
         OwnerUserId = ownerUserId;
+        Address = address;
+        ContactInfo = contactInfo;
+        Description = description;
+        GradeLevels = gradeLevels;
+        Ar_Name = arabicName;
     }
 
-    public static School Create(
+    public static ErrorOr<School> Create(
         SchoolId id,
         UserId createdBy,
         string name,
-        UserId ownerUserId)
+        string? arabicName,
+        UserId ownerUserId,
+        Address address,
+        SchoolContactInfo contactInfo,
+        GradeLevelOffering gradeLevels,
+        string? description = null)
     {
-        School school = new(id, createdBy, name, ownerUserId);
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return Error.Validation("school.creation", "name is required");
+        }
+        School school = new(id, createdBy, name,arabicName, ownerUserId,address, contactInfo,gradeLevels, description);
 
         school.RaiseDomainEvent(new SchoolCreatedDomainEvent(
             school.Id,
@@ -39,9 +70,10 @@ public sealed class School : AggregateRoot<School, SchoolId>
         return school;
     }
 
-    private static string NormalizeRequired(string value)
+    public ErrorOr<Updated> AddPicture(SchoolPicture pictureId)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(value);
-        return value.Trim();
+        _pictures.Add(pictureId);
+        SetUpdated(DateTimeOffset.UtcNow, OwnerUserId);
+        return Result.Updated;
     }
 }

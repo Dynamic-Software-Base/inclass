@@ -2,10 +2,13 @@ using System.Text;
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Authorization;
 using Application.Abstractions.Data;
+using Application.Abstractions.Interfaces.Repositories;
 using Infrastructure.Authentication;
 using Infrastructure.Authentication.Services;
 using Infrastructure.Authorization;
 using Infrastructure.Database;
+using Infrastructure.Repositories;
+using Infrastructure.Storage;
 using Infrastructure.Time;
 using Keycloak.AuthServices.Sdk;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -32,12 +35,16 @@ public static class DependencyInjection
             .AddDatabase(configuration)
             .AddHealthChecks(configuration)
             .AddAuthenticationInternal(configuration)
-            .AddAuthorizationInternal();
+            .AddAuthorizationInternal()
+            .AddStorageServices(configuration);
 
     private static IServiceCollection AddServices(this IServiceCollection services)
     {
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddScoped<IEnsureLocalUserService, EnsureLocalUser>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IMemberShipReposiory, MemberShipRepository>();
+        services.AddScoped<ISchoolRepository, SchoolRepository>();
         return services;
     }
 

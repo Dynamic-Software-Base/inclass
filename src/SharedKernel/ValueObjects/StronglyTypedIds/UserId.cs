@@ -5,7 +5,7 @@ public readonly record struct UserId(Guid Value)
     public static UserId New() => new(Guid.NewGuid());
     public static UserId From(Guid id) => new(id);
     public static UserId From(string id) => new(Guid.Parse(id));
-
+    public static UserId Empty() => new(Guid.Empty);
     public override string ToString() => Value.ToString();
 
 

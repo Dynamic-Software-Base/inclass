@@ -23,10 +23,9 @@ public class AuthTestController : ControllerBase
 #pragma warning restore S6968
     {
         ICurrentUser user = _currentUserService.GetCurrentUser();
-
         return Ok(new
         {
-            user.Id,
+            user.Id.Value,
             user.Email,
             user.FullName,
             user.Roles,

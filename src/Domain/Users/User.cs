@@ -64,4 +64,5 @@ public sealed class User : AggregateRoot<User, UserId>
         ArgumentException.ThrowIfNullOrWhiteSpace(value);
         return value.Trim();
     }
+
 }

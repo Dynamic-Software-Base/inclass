@@ -9,7 +9,7 @@ where TId : notnull
 
     public DateTimeOffset CreatedAt { get; set; }
     public UserId CreatedBy { get; set; }
-    public DateTimeOffset LastModifiedAt { get; set; }
+    public DateTimeOffset? LastModifiedAt { get; set; }
     public UserId LastModifiedBy { get; set; }
 
     public void SetUpdated(DateTimeOffset utcNow, UserId updatedBy)
@@ -24,5 +24,6 @@ where TId : notnull
     {
         CreatedAt = DateTimeOffset.UtcNow;
         CreatedBy = createdBy;
+        LastModifiedBy = UserId.Empty();
     }
 }

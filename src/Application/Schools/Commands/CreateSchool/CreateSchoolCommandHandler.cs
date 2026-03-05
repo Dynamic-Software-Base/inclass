@@ -1,57 +1,115 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
+using Application.Abstractions.Interfaces.Repositories;
 using Application.Schools.Contracts;
 using Domain.Schools;
 using MediatR;
 using SharedKernel;
 using SharedKernel.Enums;
+using SharedKernel.ValueObjects;
+using SharedKernel.ValueObjects.Schools;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 
 namespace Application.Schools.Commands.CreateSchool;
 
-public sealed class CreateSchoolCommandHandler(
-    IUnitOfWork unitOfWork,
-    ICurrentUserService currentUserService)
+public sealed class CreateSchoolCommandHandler
     : IRequestHandler<CreateSchoolCommand, ErrorOr<CreateSchoolResponse>>
 {
-    private const int MinSchoolNameLength = 2;
-    private const int MaxSchoolNameLength = 200;
+        private readonly ICurrentUserService _currentUserService;
+        private readonly ISchoolRepository schoolRepo;
+        private readonly IMemberShipReposiory memberShipReposiory;
+        public CreateSchoolCommandHandler(ICurrentUserService currentUserService, ISchoolRepository schoolRepo, IMemberShipReposiory memberShipReposiory)
+        {
+            _currentUserService = currentUserService;
+            this.schoolRepo = schoolRepo;
+            this.memberShipReposiory = memberShipReposiory;
+        }
 
-    public async Task<ErrorOr<CreateSchoolResponse>> Handle(
+        public async Task<ErrorOr<CreateSchoolResponse>> Handle(
         CreateSchoolCommand request,
         CancellationToken cancellationToken)
-    {
-        ICurrentUser currentUser = currentUserService.GetCurrentUser();
-        if (!currentUser.IsAuthenticated)
         {
-            return Error.Unauthorized("School.Create.Unauthorized", "Authentication is required to create schools.");
-        }
+            ICurrentUser currentUser = _currentUserService.GetCurrentUser();
+            UserId currentUserId = currentUser.Id;
+            string? arabicName = request.Name;
+            string? description = request.Description;
 
-        string name = request.Name?.Trim() ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            return Error.Validation("School.Create.Name.Required", "School name is required.");
-        }
 
-        if (name.Length < MinSchoolNameLength)
-        {
-            return Error.Validation(
-                "School.Create.Name.MinLength",
-                $"School name must be at least {MinSchoolNameLength} characters.");
-        }
+            CreateSchoolAddress addressDto = request.Address;
+            ErrorOr<Address> addressResult = Address.Create(
+                addressDto.StreetAddress,
+                addressDto.BuildingNumber,
+                addressDto.ApartmentNumber,
+                addressDto.City,
+                addressDto.Province,
+                addressDto.Region,
+                addressDto.PostalCode,
+                null
+            );
+            if (addressResult.IsError)
+            {
+                return addressResult.Errors;
+            }
 
-        if (name.Length > MaxSchoolNameLength)
-        {
-            return Error.Validation(
-                "School.Create.Name.MaxLength",
-                $"School name must be {MaxSchoolNameLength} characters or fewer.");
-        }
+            Address address = addressResult.Value;
+        //todo : replace the coordinates with an actual service value
+            CreateSchoolContactInfo contactInfoDto = request.ContactInfo;
+            ErrorOr<SchoolContactInfo> schoolContactInfoResult = SchoolContactInfo.Create(contactInfoDto.PrimaryPhoneNumber, contactInfoDto.SecondaryPhoneNumber,contactInfoDto.Email);
+            if (schoolContactInfoResult.IsError)
+            {
+                return schoolContactInfoResult.Errors;
+            }
 
-        var school = School.Create(
-            SchoolId.New(),
-            currentUser.Id,
-            name,
-            currentUser.Id);
+            SchoolContactInfo schoolContactInfo = schoolContactInfoResult.Value;
+
+
+            CreateSchoolGradeLevelOffering GradeLevelOfferingDto = request.GradeLevels;
+            ErrorOr<GradeLevelOffering> gradeLevelOfferingDto = GradeLevelOffering.Create(
+                GradeLevelOfferingDto.hasPreSchool,
+                GradeLevelOfferingDto.hasPrimarySchool,
+                GradeLevelOfferingDto.hasMiddleSchool,
+                GradeLevelOfferingDto.hasHighSchool);
+
+            if (gradeLevelOfferingDto.IsError)
+            {
+                return gradeLevelOfferingDto.Errors;
+            }
+
+            GradeLevelOffering gradeLevelOffering = gradeLevelOfferingDto.Value;
+
+
+            ErrorOr<School> schoolResult = School.Create(
+                SchoolId.New(),
+                currentUserId,
+                request.Name,
+                arabicName,
+                currentUserId,
+                address,
+                schoolContactInfo,
+                gradeLevelOffering,
+                description
+            );
+            if (schoolResult.IsError)
+            {
+                return schoolResult.Errors;
+            }
+            School school = schoolResult.Value;
+
+
+
+
+            List<CreateSchoolPicturesDto> picturesDto = request.Pictures;
+            foreach (CreateSchoolPicturesDto pictureDto in picturesDto)
+            {
+                var picture = SchoolPicture.Create((StoredFileId)pictureDto.PictureId, null, pictureDto.IsMain);
+
+                ErrorOr<Updated> addPictureToSchoolResult = school.AddPicture(picture);
+                if (addPictureToSchoolResult.IsError)
+                {
+                    return addPictureToSchoolResult.Errors;
+                }
+            }
+
 
         var membership = UserSchoolMembership.Create(
             UserSchoolMembershipId.New(),
@@ -60,16 +118,11 @@ public sealed class CreateSchoolCommandHandler(
             UserRole.SchoolOwner,
             isActive: true);
 
-        await unitOfWork
-            .Set<School>()
-            .AddAsync(school, cancellationToken);
 
-        await unitOfWork
-            .Set<UserSchoolMembership>()
-            .AddAsync(membership, cancellationToken);
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
+        await schoolRepo.AddAsync(school, cancellationToken);
+        await memberShipReposiory.AddAsync(membership, cancellationToken);
         return new CreateSchoolResponse(school.Id, school.Name);
     }
+
+
 }

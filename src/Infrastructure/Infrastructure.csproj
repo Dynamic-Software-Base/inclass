@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
+    <PackageReference Include="Azure.Storage.Blobs" />
     <PackageReference Include="EFCore.NamingConventions" />
     <PackageReference Include="Keycloak.AuthServices.Authentication" />
     <PackageReference Include="Keycloak.AuthServices.Sdk" />

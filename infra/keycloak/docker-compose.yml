@@ -22,6 +22,8 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.5.0
+    volumes:
+      - ./themes/inclass:/opt/keycloak/themes/inclass
     container_name: keycloak-local
     environment:
       # Database

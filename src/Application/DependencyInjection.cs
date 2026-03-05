@@ -1,5 +1,7 @@
 ﻿using System.Reflection;
+using Application.Abstractions.Behaviors;
 using FluentValidation;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using SharedKernel;
 
@@ -9,12 +11,15 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
+        var assembly = Assembly.GetExecutingAssembly();
+        services.AddValidatorsFromAssembly(assembly);
         services.AddMediatR(config =>
         {
             config.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+            config.AddBehavior(typeof(IPipelineBehavior<,>),typeof(UnhandledExceptionBehaviour<,>));
+            config.AddBehavior(typeof(IPipelineBehavior<,>),typeof(UnitOfWorkBehavior<,>));
         });
 
-        services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
 
         return services;
     }

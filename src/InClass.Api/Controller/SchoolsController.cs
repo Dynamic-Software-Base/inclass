@@ -23,13 +23,13 @@ public sealed class SchoolsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize]
+    [Authorize(Policy = SchoolPolicies.OwnerOrAdmin)]
     public async Task<IActionResult> Create(
-        [FromBody] CreateSchoolRequest request,
+        [FromBody] CreateSchoolCommand request,
         CancellationToken cancellationToken)
     {
         ErrorOr<CreateSchoolResponse> result =
-            await _sender.Send(new CreateSchoolCommand(request.Name), cancellationToken);
+            await _sender.Send(request, cancellationToken);
 
         return result.Match<IActionResult>(
             response => Created(
@@ -37,6 +37,8 @@ public sealed class SchoolsController : ControllerBase
                 new { schoolId = response.SchoolId.Value, name = response.Name }),
             errors => this.ToProblem(errors));
     }
+
+
 
     [HttpGet("{schoolId:guid}/members")]
     [Authorize(Policy = SchoolPolicies.OwnerOrAdmin)]
