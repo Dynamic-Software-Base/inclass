@@ -10,7 +10,7 @@ namespace Web.Api.Controller;
 
 [ApiController]
 [Route("api/me")]
-public sealed class MeController : ControllerBase
+public sealed class MeController : ApiBaseController
 {
     private readonly ISender _sender;
 
@@ -24,14 +24,6 @@ public sealed class MeController : ControllerBase
     public async Task<IActionResult> GetSchools(CancellationToken cancellationToken)
     {
         ErrorOr<List<MySchoolDto>> result = await _sender.Send(new GetMySchoolsQuery(), cancellationToken);
-
-        return result.Match<IActionResult>(
-            response => Ok(response.Select(school => new
-            {
-                schoolId = school.SchoolId.Value,
-                name = school.Name,
-                roles = school.Roles
-            })),
-            errors => this.ToProblem(errors));
+        return ToApiResponse<List<MySchoolDto>>(result);
     }
 }
