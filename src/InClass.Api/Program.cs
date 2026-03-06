@@ -1,5 +1,6 @@
 using System.Reflection;
 using Application;
+using Application.Abstractions.Authentication;
 using HealthChecks.UI.Client;
 using Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -12,17 +13,27 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, loggerConfig) => loggerConfig.ReadFrom.Configuration(context.Configuration));
 
 builder.Services.AddSwaggerGenWithAuth();
-
+builder.Services.AddControllers();
 builder.Services
     .AddApplication()
-    .AddPresentation()
+    .AddPresentation(builder.Configuration)
     .AddInfrastructure(builder.Configuration);
 
-builder.Services.AddEndpoints(Assembly.GetExecutingAssembly());
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("BFF", policy =>
+    {
+        policy
+            .WithOrigins(builder.Configuration["AllowedCorsOrigins"]!)
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
+    });
+});
 
 WebApplication app = builder.Build();
 
-app.MapEndpoints();
 
 if (app.Environment.IsDevelopment())
 {
@@ -46,10 +57,21 @@ app.UseSerilogRequestLogging();
 
 app.UseExceptionHandler();
 
+app.UseCors("BFF");
+
 app.UseAuthentication();
 
 app.UseAuthorization();
+app.Use(async (context, next) =>
+{
+    if (context.User?.Identity?.IsAuthenticated == true)
+    {
+        IEnsureLocalUserService provisioner = context.RequestServices.GetRequiredService<IEnsureLocalUserService>();
+        await provisioner.EnsureLocalUserAsync(context.RequestAborted);
+    }
 
+    await next();
+});
 // REMARK: If you want to use Controllers, you'll need this.
 app.MapControllers();
 

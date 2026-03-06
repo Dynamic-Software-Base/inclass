@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-//using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.OpenApi;
 
 namespace Web.Api.Extensions;
 
@@ -7,39 +7,33 @@ internal static class ServiceCollectionExtensions
 {
     internal static IServiceCollection AddSwaggerGenWithAuth(this IServiceCollection services)
     {
-        services.AddSwaggerGen(static o =>
+        services.AddOpenApi(static options =>
         {
-            o.CustomSchemaIds(id => id.FullName!.Replace('+', '-'));
+            options.CreateSchemaReferenceId =
+                static typeInfo => typeInfo.Type.FullName?.Replace('+', '-');
 
-            // Temporarily commented out
-            //var securityScheme = new OpenApiSecurityScheme
-            //{
-            //    Name = "JWT Authentication",
-            //    Description = "Enter your JWT token in this field",
-            //    In = ParameterLocation.Header,
-            //    Type = SecuritySchemeType.Http,
-            //    Scheme = JwtBearerDefaults.AuthenticationScheme,
-            //    BearerFormat = "JWT"
-            //};
+            options.AddDocumentTransformer(static (document, _, _) =>
+            {
+                document.Components ??= new OpenApiComponents();
+                document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
 
-            //o.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, securityScheme);
+                document.Components.SecuritySchemes[JwtBearerDefaults.AuthenticationScheme] =
+                    new OpenApiSecurityScheme
+                    {
+                        Type = SecuritySchemeType.Http,
+                        Scheme = "bearer",
+                        BearerFormat = "JWT",
+                        Description = "JWT bearer token using the Authorization header."
+                    };
 
-            //var securityRequirement = new OpenApiSecurityRequirement
-            //{
-            //    {
-            //        new OpenApiSecurityScheme
-            //        {
-            //            Reference = new OpenApiReference
-            //            {
-            //                Type = ReferenceType.SecurityScheme,
-            //                Id = JwtBearerDefaults.AuthenticationScheme
-            //            }
-            //        },
-            //        []
-            //    }
-            //};
+                document.Security ??= [];
+                document.Security.Add(new OpenApiSecurityRequirement
+                {
+                    [new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme, document, null)] = []
+                });
 
-            //o.AddSecurityRequirement(securityRequirement);
+                return Task.CompletedTask;
+            });
         });
 
         return services;

@@ -1,18 +1,26 @@
-﻿namespace SharedKernel;
+﻿using System.Diagnostics.CodeAnalysis;
 
-public abstract class Entity
+namespace SharedKernel;
+
+[SuppressMessage("Major Code Smell", "S4035:Seal class 'Entity' or implement 'IEqualityComparer<T>' instead.",
+    Justification = "DDD entity base: equality is defined by Id and runtime type.")]
+public abstract class Entity<TSelf,TId> : IEquatable<TSelf>
+where TSelf :Entity<TSelf,TId>
+where TId : notnull
 {
-    private readonly List<IDomainEvent> _domainEvents = [];
+    public TId Id { get; } = default!;
+    protected Entity(TId id) => Id = id;
+    protected Entity(){}
 
-    public List<IDomainEvent> DomainEvents => [.. _domainEvents];
 
-    public void ClearDomainEvents()
+    public  bool Equals(TSelf? other)
+        => other is not null
+           && (ReferenceEquals(this, other) || (GetType() == other.GetType() && Id.Equals(other.Id)));
+
+
+    public override bool Equals(object? obj) => obj is TSelf other && Equals(other);
+    public override int GetHashCode()
     {
-        _domainEvents.Clear();
-    }
-
-    public void Raise(IDomainEvent domainEvent)
-    {
-        _domainEvents.Add(domainEvent);
+        return HashCode.Combine(GetType(), Id);
     }
 }
