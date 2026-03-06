@@ -67,7 +67,7 @@ public class LocalFileStorageProvider : IStorageProvider
         }
     }
 
-    public async Task<ErrorOr<Stream>> DownloadAsync(string blobPath, CancellationToken cancellationToken = default)
+    public Task<ErrorOr<Stream>> DownloadAsync(string blobPath, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -75,24 +75,23 @@ public class LocalFileStorageProvider : IStorageProvider
 
             if (!File.Exists(filePath))
             {
-                return await Task.FromResult(ApplicationErrors.StorageErrors.FileNotFound);
+                return Task.FromResult<ErrorOr<Stream>>(ApplicationErrors.StorageErrors.FileNotFound);
             }
 
-            await using var stream = new FileStream(
+            var stream = new FileStream(
                 filePath,
                 FileMode.Open,
                 FileAccess.Read,
                 FileShare.Read,
                 bufferSize: 81920,
-                useAsync:true);
+                useAsync: true);
 
-            return await Task.FromResult<ErrorOr<Stream>>((Stream)stream);
-
+            return Task.FromResult<ErrorOr<Stream>>(stream);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to download file {BlobPath} from local storage", blobPath);
-            return await Task.FromResult<ErrorOr<Stream>>(ApplicationErrors.StorageErrors.DownloadFailed(ex.Message));
+            return Task.FromResult<ErrorOr<Stream>>(ApplicationErrors.StorageErrors.DownloadFailed(ex.Message));
         }
     }
 

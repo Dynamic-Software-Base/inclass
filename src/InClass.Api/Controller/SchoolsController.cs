@@ -1,6 +1,9 @@
 using Application.Schools.Commands.CreateSchool;
 using Application.Schools.Contracts;
 using Application.Schools.Queries.GetSchoolMembers;
+using Application.Schools.Queries.GetSchools;
+using Contract.InClass.Pagination;
+using Contract.InClass.Response;
 using ErrorOr;
 using Infrastructure.Authorization;
 using MediatR;
@@ -13,7 +16,7 @@ namespace Web.Api.Controller;
 
 [ApiController]
 [Route("api/schools")]
-public sealed class SchoolsController : ControllerBase
+public sealed class SchoolsController : ApiBaseController
 {
     private readonly ISender _sender;
 
@@ -49,8 +52,17 @@ public sealed class SchoolsController : ControllerBase
         ErrorOr<List<SchoolMemberDto>> result =
             await _sender.Send(new GetSchoolMembersQuery(SchoolId.From(schoolId)), cancellationToken);
 
-        return result.Match<IActionResult>(
-            response => Ok(response),
-            errors => this.ToProblem(errors));
+        return ToApiResponse(result);
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetSchools(
+        [FromQuery] GetSchoolsQuery request,
+        CancellationToken cancellationToken
+    )
+    {
+        ErrorOr<PagedResult<SchoolSummaryDto>> result = await _sender.Send(request, cancellationToken);
+        return ToApiResponse(result);
     }
 }

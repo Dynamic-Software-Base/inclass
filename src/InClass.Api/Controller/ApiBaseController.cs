@@ -1,4 +1,4 @@
-﻿using InClass.Contracts;
+﻿using Contract.InClass.ApiContract;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Web.Api.Controller;

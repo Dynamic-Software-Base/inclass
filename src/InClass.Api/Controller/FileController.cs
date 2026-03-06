@@ -12,7 +12,7 @@ namespace Web.Api.Controller;
 [ApiController]
 [Authorize]
 [Route("api/[controller]")]
-public class FileController : ControllerBase
+public class FileController : ApiBaseController
 {
     private readonly ISender _sender;
 
@@ -44,10 +44,9 @@ public class FileController : ControllerBase
         ErrorOr<FileDownloadResult> result = await _sender.Send(new ServeFileQuery(id), cancellationToken);
 
         return result.Match<IActionResult>(
-            file => File(file.Stream, file.ContentType, file.FileName, enableRangeProcessing: true),
-            errors => errors[0].Type == ErrorType.NotFound
-                ? NotFound(errors)
-                : BadRequest(errors[0].Description));
+            file => File(file.Stream, file.ContentType, file.FileName),
+            errors => ToApiResponse(ErrorOr<FileDownloadResult>.From(errors))
+        );
     }
     [HttpGet("my-files")]
     public async Task<IActionResult> GetUserFiles(CancellationToken cancellationToken)

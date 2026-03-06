@@ -81,12 +81,14 @@ public class AzureBlobStorageProvider : IStorageProvider
         }
     }
 
+    // ✅ Azure - copy to MemoryStream so it's independent of the HTTP response lifetime
     public async Task<ErrorOr<Stream>> DownloadAsync(string blobPath, CancellationToken cancellationToken = default)
     {
         if (_blobServiceClient is null)
         {
             return ApplicationErrors.StorageErrors.ProviderUnavailable(ProviderName);
         }
+
 
         try
         {
@@ -99,8 +101,15 @@ public class AzureBlobStorageProvider : IStorageProvider
                 return ApplicationErrors.StorageErrors.FileNotFound;
             }
 
-            Response<BlobDownloadStreamingResult> response = await blobClient.DownloadStreamingAsync(cancellationToken: cancellationToken);
-            return response.Value.Content;
+
+            Response<BlobDownloadStreamingResult> response =
+                await blobClient.DownloadStreamingAsync(cancellationToken: cancellationToken);
+
+            var memoryStream = new MemoryStream();
+            await response.Value.Content.CopyToAsync(memoryStream, cancellationToken);
+            memoryStream.Position = 0;
+
+            return memoryStream;
         }
         catch (Exception ex)
         {
