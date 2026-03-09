@@ -1,6 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Interfaces.Repositories;
+using Application.Abstractions.Interfaces.Services;
 using Application.Schools.Contracts;
 using Domain.Schools;
 using MediatR;
@@ -18,11 +19,13 @@ public sealed class CreateSchoolCommandHandler
         private readonly ICurrentUserService _currentUserService;
         private readonly ISchoolRepository schoolRepo;
         private readonly IMemberShipReposiory memberShipReposiory;
-        public CreateSchoolCommandHandler(ICurrentUserService currentUserService, ISchoolRepository schoolRepo, IMemberShipReposiory memberShipReposiory)
+        private readonly IGeoCodingService geocodingService;
+        public CreateSchoolCommandHandler(ICurrentUserService currentUserService, ISchoolRepository schoolRepo, IMemberShipReposiory memberShipReposiory, IGeoCodingService geocodingService)
         {
             _currentUserService = currentUserService;
             this.schoolRepo = schoolRepo;
             this.memberShipReposiory = memberShipReposiory;
+            this.geocodingService = geocodingService;
         }
 
         public async Task<ErrorOr<CreateSchoolResponse>> Handle(
@@ -51,8 +54,17 @@ public sealed class CreateSchoolCommandHandler
                 return addressResult.Errors;
             }
 
-            Address address = addressResult.Value;
-        //todo : replace the coordinates with an actual service value
+            Coordinates? coordinates = null;
+            ErrorOr<Coordinates> geocodeResult = await geocodingService.GetCoordinatesAsync(addressResult.Value.ToString(),cancellationToken);
+
+            if (!geocodeResult.IsError)
+            {
+                coordinates = geocodeResult.Value;
+            }
+
+            Address address = coordinates is not null
+                ? addressResult.Value.WithCoordinates(coordinates)
+                : addressResult.Value;
             CreateSchoolContactInfo contactInfoDto = request.ContactInfo;
             ErrorOr<SchoolContactInfo> schoolContactInfoResult = SchoolContactInfo.Create(contactInfoDto.PrimaryPhoneNumber, contactInfoDto.SecondaryPhoneNumber,contactInfoDto.Email);
             if (schoolContactInfoResult.IsError)

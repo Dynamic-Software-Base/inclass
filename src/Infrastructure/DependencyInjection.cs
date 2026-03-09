@@ -3,10 +3,12 @@ using Application.Abstractions.Authentication;
 using Application.Abstractions.Authorization;
 using Application.Abstractions.Data;
 using Application.Abstractions.Interfaces.Repositories;
+using Application.Abstractions.Interfaces.Services;
 using Infrastructure.Authentication;
 using Infrastructure.Authentication.Services;
 using Infrastructure.Authorization;
 using Infrastructure.Database;
+using Infrastructure.Geocoding;
 using Infrastructure.Repositories;
 using Infrastructure.Storage;
 using Infrastructure.Time;
@@ -45,6 +47,7 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IMemberShipReposiory, MemberShipRepository>();
         services.AddScoped<ISchoolRepository, SchoolRepository>();
+        services.AddHttpClient<IGeoCodingService, GoogleGeocodingService>();
         return services;
     }
 
@@ -79,6 +82,8 @@ public static class DependencyInjection
             .Bind(configuration.GetSection(KeycloakSettings.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
+        services.Configure<GoogleGeocodingOptions>(
+            configuration.GetSection(GoogleGeocodingOptions.SectionName));
         return services;
     }
 
