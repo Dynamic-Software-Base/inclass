@@ -16,6 +16,6 @@ public class FileUrlResolver : IFileUrlResolver
 #pragma warning restore CA1055
     {
         HttpRequest request = _httpContextAccessor.HttpContext?.Request;
-        return $"{request?.Scheme}://{request?.Host}/api/files/{storedFile.Value}";
+        return $"{request?.Scheme}://{request?.Host}/api/File/{storedFile.Value}";
     }
 }

@@ -4,10 +4,12 @@ using Application.Schools.Queries.GetSchools;
 using Contract.InClass.Common;
 using Contract.InClass.Pagination;
 using Contract.InClass.Response;
+using Contract.InClass.Response.School;
 using Domain.Schools;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel.Enums;
+using SharedKernel.ValueObjects.StronglyTypedIds;
 
 namespace Infrastructure.Repositories;
 
@@ -114,4 +116,25 @@ public class SchoolRepository : ISchoolRepository
         };
     }
 
+    public async Task<ErrorOr<List<SchoolSummaryDto>>> GetAllOwnerAsync(UserId id, IFileUrlResolver fileResolver, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Schools.AsNoTracking()
+            .Where(s => s.OwnerUserId == id.Value)
+            .Select(s => new SchoolSummaryDto(
+                s.Id.Value,
+                s.Name,
+                s.Ar_Name,
+                s.Address.City,
+                s.Description,
+                new GradeLevelOfferingDto(
+                    s.GradeLevels.HasPreSchool,
+                    s.GradeLevels.HasPrimarySchool,
+                    s.GradeLevels.HasMiddleSchool,
+                    s.GradeLevels.HasHighSchool),
+                s.Pictures.Select(p => new SchoolPictureResponse(
+                    StoredFileId: p.StoredFileId,
+                    Url: fileResolver.GetAccessUrl(p.StoredFileId),
+                    IsMain: p.IsMain)).ToList()))
+            .ToListAsync(cancellationToken);
+    }
 }

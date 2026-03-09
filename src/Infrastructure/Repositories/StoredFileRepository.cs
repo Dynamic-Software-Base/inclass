@@ -2,6 +2,7 @@
 using Domain.File;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
+using SharedKernel.ValueObjects.Schools;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 
 namespace Infrastructure.Repositories;
@@ -27,6 +28,22 @@ public class StoredFileRepository : IStorageFileRepository
             .Where(f => f.OwnerId == ownerId)
             .OrderByDescending(f => f.CreatedAt)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<ErrorOr<IReadOnlyList<StoredFile>>> GetSchoolImagesAsync(UserId ownerId, CancellationToken cancellationToken = default)
+    {
+        List<StoredFileId> storedFileIds =  await _dbContext.Schools
+            .AsNoTracking()
+            .Where(s => s.OwnerUserId == ownerId)
+            .SelectMany(s => s.Pictures)
+            .Select(s => s.StoredFileId)
+            .ToListAsync(cancellationToken);
+
+        List<StoredFile> storedFiles = await _dbContext.StoredFiles
+            .AsNoTracking()
+            .Where(f => storedFileIds.Contains(f.Id))
+            .ToListAsync(cancellationToken);
+        return storedFiles;
     }
 
     public async  Task<ErrorOr<bool>> ExistAsync(StoredFileId fileId, CancellationToken cancellationToken = default)

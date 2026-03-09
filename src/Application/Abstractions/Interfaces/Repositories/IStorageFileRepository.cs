@@ -7,6 +7,7 @@ public interface IStorageFileRepository
 {
     Task<ErrorOr<StoredFile?>> GetByIdAsync(StoredFileId fileId,CancellationToken cancellationToken = default);
     Task<ErrorOr<IReadOnlyList<StoredFile>>> GetByOwnerIdAsync(UserId ownerId, CancellationToken cancellationToken = default);
+    Task<ErrorOr<IReadOnlyList<StoredFile>>> GetSchoolImagesAsync(UserId ownerId, CancellationToken cancellationToken = default);
     Task<ErrorOr<bool>> ExistAsync(StoredFileId fileId, CancellationToken cancellationToken = default);
     Task<ErrorOr<Success>> AddAsync(StoredFile file, CancellationToken cancellationToken = default);
     void Delete(StoredFile file);

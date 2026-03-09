@@ -3,6 +3,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Interfaces.Repositories;
 using Application.Abstractions.Interfaces.Storage;
+using Contract.InClass.Response.Files;
 using Domain.File;
 using Domain.Users;
 using MediatR;
@@ -11,7 +12,7 @@ using SharedKernel;
 namespace Application.Files.Queries.GetUserFiles;
 
 public class GetUserFilesQueryHandler
-    : IRequestHandler<GetUserFilesQuery, ErrorOr<List<UserFileResult>>>
+    : IRequestHandler<GetUserFilesQuery, ErrorOr<List<UploadFileResult>>>
 {
     private readonly IStorageService _storageService;
     private readonly ICurrentUserService _currentUserService;
@@ -30,19 +31,11 @@ public class GetUserFilesQueryHandler
         _fileUrlResolver = fileUrlResolver;
     }
 
-    public async Task<ErrorOr<List<UserFileResult>>> Handle(
+    public async Task<ErrorOr<List<UploadFileResult>>> Handle(
         GetUserFilesQuery request,
         CancellationToken cancellationToken)
     {
         ICurrentUser _currentUser = _currentUserService.GetCurrentUser();
-        if (!_currentUser.IsAuthenticated || _currentUser.Id == Guid.Empty)
-        {
-            return Error.Unauthorized(
-                code: "File.Unauthorized",
-                description: "User is not authenticated.");
-        }
-
-
         User? user = await _userRepository.GetByIdentityIdAsync(
             _currentUser.Id, cancellationToken);
 
@@ -56,14 +49,13 @@ public class GetUserFilesQueryHandler
 
         ErrorOr<IReadOnlyList<StoredFile>> result = await _storageService.GetByOwnerAsync(user.Id, cancellationToken);
 
-        return result.Match<ErrorOr<List<UserFileResult>>>(
-            files => files.Select(f => new UserFileResult(
+        return result.Match<ErrorOr<List<UploadFileResult>>>(
+            files => files.Select(f => new UploadFileResult(
                 f.Id.Value,
                 f.OriginalFileName,
                 _fileUrlResolver.GetAccessUrl(f.Id),
                 f.ContentType,
-                f.SizeInBytes,
-                f.CreatedAt)).ToList(),
+                f.SizeInBytes)).ToList(),
             errors => errors);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Application.Abstractions.Authentication;
 using Application.Abstractions.Interfaces.Repositories;
 using Application.Abstractions.Interfaces.Storage;
+using Contract.InClass.Response.Files;
 using Domain.File;
 using Domain.Users;
 using MediatR;

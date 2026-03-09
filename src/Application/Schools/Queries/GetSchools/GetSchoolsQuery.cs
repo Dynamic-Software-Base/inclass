@@ -2,6 +2,7 @@
 using Contract.InClass.Common;
 using Contract.InClass.Pagination;
 using Contract.InClass.Response;
+using Contract.InClass.Response.School;
 using SharedKernel.ValueObjects.Schools;
 
 namespace Application.Schools.Queries.GetSchools;

@@ -2,6 +2,7 @@
 using Application.Abstractions.Interfaces.Storage;
 using Contract.InClass.Pagination;
 using Contract.InClass.Response;
+using Contract.InClass.Response.School;
 using MediatR;
 
 namespace Application.Schools.Queries.GetSchools;
