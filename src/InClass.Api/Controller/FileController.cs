@@ -2,6 +2,7 @@
 using Application.Files.Commands.UploadFile;
 using Application.Files.Queries.GetFile;
 using Application.Files.Queries.GetUserFiles;
+using Contract.InClass.Response.Files;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,11 +31,7 @@ public class FileController : ApiBaseController
         ErrorOr<UploadFileResult> result = await _sender.Send(
             new UploadFileCommand(stream, file.FileName, file.ContentType),
             cancellationToken);
-        return result.Match<IActionResult>(
-            value => Ok(value),
-            errors => NotFound(errors)
-        );
-
+        return ToApiResponse(result);
     }
 
     [HttpGet("{id:guid}")]
@@ -44,17 +41,14 @@ public class FileController : ApiBaseController
         ErrorOr<FileDownloadResult> result = await _sender.Send(new ServeFileQuery(id), cancellationToken);
 
         return result.Match<IActionResult>(
-            file => File(file.Stream, file.ContentType, file.FileName),
+            file => File(file.Stream, file.ContentType, file.FileName, enableRangeProcessing: true),
             errors => ToApiResponse(ErrorOr<FileDownloadResult>.From(errors))
         );
     }
-    [HttpGet("my-files")]
+    [HttpGet("my-school-pictures")]
     public async Task<IActionResult> GetUserFiles(CancellationToken cancellationToken)
     {
-        ErrorOr<List<UserFileResult>> result = await _sender.Send(new GetUserFilesQuery(), cancellationToken);
-
-        return result.Match<IActionResult>(
-            userFiles => Ok(userFiles),
-            errors => BadRequest(errors));
+        ErrorOr<List<UploadFileResult>> result = await _sender.Send(new GetUserFilesQuery(), cancellationToken);
+        return ToApiResponse(result);
     }
 }

@@ -1,9 +1,11 @@
 using Application.Schools.Commands.CreateSchool;
 using Application.Schools.Contracts;
+using Application.Schools.Queries.GetOwnerSchools;
 using Application.Schools.Queries.GetSchoolMembers;
 using Application.Schools.Queries.GetSchools;
 using Contract.InClass.Pagination;
 using Contract.InClass.Response;
+using Contract.InClass.Response.School;
 using ErrorOr;
 using Infrastructure.Authorization;
 using MediatR;
@@ -11,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 using Web.Api.Infrastructure;
+using CreateSchoolResponse = Application.Schools.Contracts.CreateSchoolResponse;
 
 namespace Web.Api.Controller;
 
@@ -26,7 +29,8 @@ public sealed class SchoolsController : ApiBaseController
     }
 
     [HttpPost]
-    [Authorize(Policy = SchoolPolicies.OwnerOrAdmin)]
+    /*[Authorize(Policy = SchoolPolicies.OwnerOrAdmin)]*/
+    [Authorize]
     public async Task<IActionResult> Create(
         [FromBody] CreateSchoolCommand request,
         CancellationToken cancellationToken)
@@ -65,4 +69,12 @@ public sealed class SchoolsController : ApiBaseController
         ErrorOr<PagedResult<SchoolSummaryDto>> result = await _sender.Send(request, cancellationToken);
         return ToApiResponse(result);
     }
+
+    [HttpGet("my-schools")]
+    [Authorize]
+    public async Task<IActionResult> GetMySchools(CancellationToken cancellationToken)
+    {
+        return ToApiResponse(await _sender.Send(new GetOwnerSchoolsQuery(), cancellationToken));
+    }
+
 }
