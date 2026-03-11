@@ -12,7 +12,7 @@ public interface ISchoolRepository
 {
     Task<ErrorOr<Success>> AddAsync(School school, CancellationToken cancellationToken = default);
     Task<ErrorOr<bool>> ExistAsync(string name, CancellationToken cancellationToken = default);
-
+    Task<List<NearestSchoolDto>> GetNearestSchoolsAsync(double latitude,double longitude,int count , IFileUrlResolver fileUrlResolver, CancellationToken cancellationToken = default);
     Task<ErrorOr<PagedResult<SchoolSummaryDto>>> GetPagedAsync(GetSchoolsQuery query,IFileUrlResolver fileResolver, CancellationToken cancellationToken = default);
     Task<ErrorOr<List<SchoolSummaryDto>>> GetAllOwnerAsync(UserId id ,IFileUrlResolver fileResolver,CancellationToken cancellationToken = default);
 }

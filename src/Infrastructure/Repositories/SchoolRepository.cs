@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions.Interfaces.Repositories;
 using Application.Abstractions.Interfaces.Storage;
+using Application.Common.Utilities;
 using Application.Schools.Queries.GetSchools;
 using Contract.InClass.Common;
 using Contract.InClass.Pagination;
@@ -9,6 +10,7 @@ using Domain.Schools;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel.Enums;
+using SharedKernel.ValueObjects.Schools;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 
 namespace Infrastructure.Repositories;
@@ -30,6 +32,37 @@ public class SchoolRepository : ISchoolRepository
     public async Task<ErrorOr<bool>> ExistAsync(string name, CancellationToken cancellationToken = default)
     {
        return await _dbContext.Schools.AnyAsync(s => s.Name.Trim() == name.Trim(),cancellationToken);
+    }
+
+    public async  Task<List<NearestSchoolDto>> GetNearestSchoolsAsync(double latitude, double longitude, int count, IFileUrlResolver fileUrlResolver,
+        CancellationToken cancellationToken = default)
+    {
+        List<School> schools = await _dbContext.Schools.AsNoTracking()
+            .Where(s => s.Address.Coordinates != null)
+            .Include(s => s.Pictures)
+            .ToListAsync(cancellationToken);
+
+        return schools
+            .Select(s => new NearestSchoolDto(
+                s.Id.Value,
+                s.Name,
+                s.Description,
+                s.Ar_Name,
+                s.Address.City,
+                ToDto(s.GradeLevels),
+                s.Address.Coordinates!.Latitude,
+                s.Address.Coordinates!.Longitude,
+                GeoDistanceCalculator.CalculateKm(latitude, longitude, s.Address.Coordinates!.Latitude,
+                    s.Address.Coordinates!.Longitude),
+                s.Pictures.Select(p => new SchoolPictureResponse(
+                    p.StoredFileId,
+                    fileUrlResolver.GetAccessUrl(p.StoredFileId),
+                    p.IsMain
+                )).ToList()
+            ))
+            .OrderBy(s => s.DistanceKm)
+            .Take(count)
+            .ToList();
     }
 
     public async Task<ErrorOr<PagedResult<SchoolSummaryDto>>> GetPagedAsync(GetSchoolsQuery query
@@ -96,11 +129,9 @@ public class SchoolRepository : ISchoolRepository
                 s.Ar_Name,
                 s.Address.City,
                 s.Description,
-                new GradeLevelOfferingDto(
-                    s.GradeLevels.HasPreSchool,
-                    s.GradeLevels.HasPrimarySchool,
-                    s.GradeLevels.HasMiddleSchool,
-                    s.GradeLevels.HasHighSchool),
+                s.Address.Coordinates!.Latitude,
+                s.Address.Coordinates.Longitude,
+                ToDto(s.GradeLevels),
                 s.Pictures.Select(p => new SchoolPictureResponse(
                     StoredFileId:p.StoredFileId ,
                     Url: fileResolver.GetAccessUrl(p.StoredFileId),
@@ -126,15 +157,19 @@ public class SchoolRepository : ISchoolRepository
                 s.Ar_Name,
                 s.Address.City,
                 s.Description,
-                new GradeLevelOfferingDto(
-                    s.GradeLevels.HasPreSchool,
-                    s.GradeLevels.HasPrimarySchool,
-                    s.GradeLevels.HasMiddleSchool,
-                    s.GradeLevels.HasHighSchool),
+                s.Address.Coordinates!.Latitude,
+                s.Address.Coordinates.Longitude,
+                ToDto(s.GradeLevels),
                 s.Pictures.Select(p => new SchoolPictureResponse(
                     StoredFileId: p.StoredFileId,
                     Url: fileResolver.GetAccessUrl(p.StoredFileId),
                     IsMain: p.IsMain)).ToList()))
             .ToListAsync(cancellationToken);
     }
+
+    private static GradeLevelOfferingDto ToDto(GradeLevelOffering gradeLevelOffering) => new GradeLevelOfferingDto(
+        gradeLevelOffering.HasPreSchool,
+        gradeLevelOffering.HasPrimarySchool,
+        gradeLevelOffering.HasMiddleSchool,
+        gradeLevelOffering.HasHighSchool);
 }
