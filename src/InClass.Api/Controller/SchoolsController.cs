@@ -1,9 +1,11 @@
 using Application.Schools.Commands.CreateSchool;
 using Application.Schools.Contracts;
+using Application.Schools.Queries.GetNearestSchools;
 using Application.Schools.Queries.GetOwnerSchools;
 using Application.Schools.Queries.GetSchoolMembers;
 using Application.Schools.Queries.GetSchools;
 using Contract.InClass.Pagination;
+using Contract.InClass.Request.School;
 using Contract.InClass.Response;
 using Contract.InClass.Response.School;
 using ErrorOr;
@@ -14,6 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 using Web.Api.Infrastructure;
 using CreateSchoolResponse = Application.Schools.Contracts.CreateSchoolResponse;
+using GetSchoolsQuery = Application.Schools.Queries.GetSchools.GetSchoolsQuery;
 
 namespace Web.Api.Controller;
 
@@ -59,14 +62,14 @@ public sealed class SchoolsController : ApiBaseController
         return ToApiResponse(result);
     }
 
-    [HttpGet]
+    [HttpGet("Listing")]
     [AllowAnonymous]
     public async Task<IActionResult> GetSchools(
-        [FromQuery] GetSchoolsQuery request,
+        [FromQuery] GetSchoolQuery request,
         CancellationToken cancellationToken
     )
     {
-        ErrorOr<PagedResult<SchoolSummaryDto>> result = await _sender.Send(request, cancellationToken);
+        ErrorOr<PagedResult<SchoolSummaryDto>> result = await _sender.Send(new GetSchoolsQuery(request.NameSearch,request.City,request.GradeLevelOffering), cancellationToken);
         return ToApiResponse(result);
     }
 
@@ -77,4 +80,12 @@ public sealed class SchoolsController : ApiBaseController
         return ToApiResponse(await _sender.Send(new GetOwnerSchoolsQuery(), cancellationToken));
     }
 
+    [HttpGet("/schools/nearest")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetNearestSchools([FromQuery] double lat, [FromQuery] double lng,
+        [FromQuery] int count = 4, CancellationToken cancellationToken = default!)
+    {
+        var query = new GetNearestSchoolsQuery(lat, lng, count);
+        return ToApiResponse(await _sender.Send(query, cancellationToken));
+    }
 }

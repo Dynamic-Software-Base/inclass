@@ -34,7 +34,7 @@ public sealed class CreateSchoolCommandHandler
         {
             ICurrentUser currentUser = _currentUserService.GetCurrentUser();
             UserId currentUserId = currentUser.Id;
-            string? arabicName = request.Name;
+            string? arabicName = request.Ar_Name;
             string? description = request.Description;
 
 
