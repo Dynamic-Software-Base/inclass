@@ -1,9 +1,10 @@
 using Application.Abstractions.Authentication;
-using Application.Abstractions.Data;
 using Application.Abstractions.Interfaces.Repositories;
 using Application.Abstractions.Interfaces.Services;
 using Application.Schools.Contracts;
+using Domain.EducationalSystem.Entities;
 using Domain.Schools;
+using Domain.Schools.Entities;
 using MediatR;
 using SharedKernel;
 using SharedKernel.Enums;
@@ -16,125 +17,166 @@ namespace Application.Schools.Commands.CreateSchool;
 public sealed class CreateSchoolCommandHandler
     : IRequestHandler<CreateSchoolCommand, ErrorOr<CreateSchoolResponse>>
 {
-        private readonly ICurrentUserService _currentUserService;
-        private readonly ISchoolRepository schoolRepo;
-        private readonly IMemberShipReposiory memberShipReposiory;
-        private readonly IGeoCodingService geocodingService;
-        public CreateSchoolCommandHandler(ICurrentUserService currentUserService, ISchoolRepository schoolRepo, IMemberShipReposiory memberShipReposiory, IGeoCodingService geocodingService)
-        {
-            _currentUserService = currentUserService;
-            this.schoolRepo = schoolRepo;
-            this.memberShipReposiory = memberShipReposiory;
-            this.geocodingService = geocodingService;
-        }
+    private readonly ICurrentUserService _currentUserService;
+    private readonly ISchoolRepository _schoolRepo;
+    private readonly IMemberShipReposiory _membershipRepo;
+    private readonly IGeoCodingService _geocodingService;
+    private readonly IEducationalSystemRepository _educationalSystemRepo;
 
-        public async Task<ErrorOr<CreateSchoolResponse>> Handle(
+    public CreateSchoolCommandHandler(
+        ICurrentUserService currentUserService,
+        ISchoolRepository schoolRepo,
+        IMemberShipReposiory membershipRepo,
+        IGeoCodingService geocodingService,
+        IEducationalSystemRepository educationalSystemRepo)
+    {
+        _currentUserService = currentUserService;
+        _schoolRepo = schoolRepo;
+        _membershipRepo = membershipRepo;
+        _geocodingService = geocodingService;
+        _educationalSystemRepo = educationalSystemRepo;
+    }
+
+    public async Task<ErrorOr<CreateSchoolResponse>> Handle(
         CreateSchoolCommand request,
         CancellationToken cancellationToken)
+    {
+        ICurrentUser currentUser = _currentUserService.GetCurrentUser();
+        UserId currentUserId = currentUser.Id;
+
+        // ── 1. Validate EducationalSystem exists ─────────────────────────────
+        var educationalSystemId = EducationalSystemId.From(request.EducationalSystemId);
+
+        bool systemExists = await _educationalSystemRepo.ExistsAsync(
+            educationalSystemId,
+            cancellationToken);
+
+        if (!systemExists)
         {
-            ICurrentUser currentUser = _currentUserService.GetCurrentUser();
-            UserId currentUserId = currentUser.Id;
-            string? arabicName = request.Ar_Name;
-            string? description = request.Description;
+            return DomainErrors.EducationalSystemErrors.NotFound;
+        }
 
 
-            CreateSchoolAddress addressDto = request.Address;
-            ErrorOr<Address> addressResult = Address.Create(
-                addressDto.StreetAddress,
-                addressDto.BuildingNumber,
-                addressDto.ApartmentNumber,
-                addressDto.City,
-                addressDto.Province,
-                addressDto.Region,
-                addressDto.PostalCode,
-                null
-            );
-            if (addressResult.IsError)
+        // ── 2. Build Address ─────────────────────────────────────────────────
+        ErrorOr<Address> addressResult = Address.Create(
+            request.Address.StreetAddress,
+            request.Address.BuildingNumber,
+            request.Address.ApartmentNumber,
+            request.Address.City,
+            request.Address.Province,
+            request.Address.Region,
+            request.Address.PostalCode,
+            null);
+
+        if (addressResult.IsError)
+        {
+            return addressResult.Errors;
+        }
+
+
+        // Geocoding is non-blocking — failure falls back to no coordinates
+        ErrorOr<Coordinates> geocodeResult = await _geocodingService
+            .GetCoordinatesAsync(addressResult.Value.ToString(), cancellationToken);
+
+        Address address = geocodeResult.IsError
+            ? addressResult.Value
+            : addressResult.Value.WithCoordinates(geocodeResult.Value);
+
+        // ── 3. Build ContactInfo ─────────────────────────────────────────────
+        ErrorOr<SchoolContactInfo> contactInfoResult = SchoolContactInfo.Create(
+            request.ContactInfo.PrimaryPhoneNumber,
+            request.ContactInfo.SecondaryPhoneNumber,
+            request.ContactInfo.Email);
+
+        if (contactInfoResult.IsError)
+        {
+            return contactInfoResult.Errors;
+        }
+
+
+        // ── 4. Create School ─────────────────────────────────────────────────
+        // GradeLevelOffering starts as Empty — derived automatically as
+        // supported grades are added below. Never passed in manually.
+        ErrorOr<School> schoolResult = School.Create(
+            SchoolId.New(),
+            currentUserId,
+            request.Name,
+            request.Ar_Name,
+            currentUserId,
+            address,
+            educationalSystemId,
+            contactInfoResult.Value,
+            request.Description);
+
+        if (schoolResult.IsError)
+        {
+            return schoolResult.Errors;
+
+        }
+
+        School school = schoolResult.Value;
+
+        // ── 5. Add supported grades ──────────────────────────────────────────
+        if (request.SupportedGradeIds.Count > 0)
+        {
+            var gradeDefinitionIds = request.SupportedGradeIds
+                .Select(GradeDefinitionId.From)
+                .ToList();
+
+            // Single query — loads GradeDefinition + parent GradeCycleDefinition
+            List<(GradeDefinition Grade, GradeCycleDefinition Cycle)> gradePairs =
+                await _educationalSystemRepo.GetGradeDefinitionsWithCyclesAsync(
+                    gradeDefinitionIds,
+                    cancellationToken);
+
+            // If count differs, one or more IDs were not found or inactive
+            if (gradePairs.Count != request.SupportedGradeIds.Count)
             {
-                return addressResult.Errors;
+                return DomainErrors.SchoolErrors.OneOrMoreGradeDefinitionsNotFound;
             }
 
-            Coordinates? coordinates = null;
-            ErrorOr<Coordinates> geocodeResult = await geocodingService.GetCoordinatesAsync(addressResult.Value.ToString(),cancellationToken);
 
-            if (!geocodeResult.IsError)
+            foreach ((GradeDefinition grade, GradeCycleDefinition cycle) in gradePairs)
             {
-                coordinates = geocodeResult.Value;
-            }
+                ErrorOr<SchoolSupportedGrade> addResult =
+                    school.AddSupportedGrade(grade, cycle);
 
-            Address address = coordinates is not null
-                ? addressResult.Value.WithCoordinates(coordinates)
-                : addressResult.Value;
-            CreateSchoolContactInfo contactInfoDto = request.ContactInfo;
-            ErrorOr<SchoolContactInfo> schoolContactInfoResult = SchoolContactInfo.Create(contactInfoDto.PrimaryPhoneNumber, contactInfoDto.SecondaryPhoneNumber,contactInfoDto.Email);
-            if (schoolContactInfoResult.IsError)
-            {
-                return schoolContactInfoResult.Errors;
-            }
-
-            SchoolContactInfo schoolContactInfo = schoolContactInfoResult.Value;
-
-
-            CreateSchoolGradeLevelOffering GradeLevelOfferingDto = request.GradeLevels;
-            ErrorOr<GradeLevelOffering> gradeLevelOfferingDto = GradeLevelOffering.Create(
-                GradeLevelOfferingDto.hasPreSchool,
-                GradeLevelOfferingDto.hasPrimarySchool,
-                GradeLevelOfferingDto.hasMiddleSchool,
-                GradeLevelOfferingDto.hasHighSchool);
-
-            if (gradeLevelOfferingDto.IsError)
-            {
-                return gradeLevelOfferingDto.Errors;
-            }
-
-            GradeLevelOffering gradeLevelOffering = gradeLevelOfferingDto.Value;
-
-
-            ErrorOr<School> schoolResult = School.Create(
-                SchoolId.New(),
-                currentUserId,
-                request.Name,
-                arabicName,
-                currentUserId,
-                address,
-                schoolContactInfo,
-                gradeLevelOffering,
-                description
-            );
-            if (schoolResult.IsError)
-            {
-                return schoolResult.Errors;
-            }
-            School school = schoolResult.Value;
-
-
-
-
-            List<CreateSchoolPicturesDto> picturesDto = request.Pictures;
-            foreach (CreateSchoolPicturesDto pictureDto in picturesDto)
-            {
-                var picture = SchoolPicture.Create((StoredFileId)pictureDto.PictureId, null, pictureDto.IsMain);
-
-                ErrorOr<Updated> addPictureToSchoolResult = school.AddPicture(picture);
-                if (addPictureToSchoolResult.IsError)
+                if (addResult.IsError)
                 {
-                    return addPictureToSchoolResult.Errors;
+                    return addResult.Errors;
                 }
+
+            }
+        }
+
+        // ── 6. Add pictures ──────────────────────────────────────────────────
+        foreach (CreateSchoolPicturesDto pictureDto in request.Pictures)
+        {
+            var picture = SchoolPicture.Create(
+                StoredFileId.From(pictureDto.PictureId),
+                null,
+                pictureDto.IsMain);
+
+            ErrorOr<Updated> addPictureResult = school.AddPicture(picture);
+            if (addPictureResult.IsError)
+            {
+                return addPictureResult.Errors;
             }
 
+        }
 
+        // ── 7. Create membership ─────────────────────────────────────────────
         var membership = UserSchoolMembership.Create(
             UserSchoolMembershipId.New(),
-            currentUser.Id,
+            currentUserId,
             school.Id,
             UserRole.SchoolOwner,
             isActive: true);
 
+        // ── 8. Persist (UoW commits in middleware) ───────────────────────────
+        await _schoolRepo.AddAsync(school, cancellationToken);
+        await _membershipRepo.AddAsync(membership, cancellationToken);
 
-        await schoolRepo.AddAsync(school, cancellationToken);
-        await memberShipReposiory.AddAsync(membership, cancellationToken);
         return new CreateSchoolResponse(school.Id, school.Name);
     }
-
-
 }

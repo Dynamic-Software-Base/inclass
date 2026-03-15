@@ -1,14 +1,6 @@
-﻿namespace SharedKernel.ValueObjects.StronglyTypedIds;
+using StronglyTypedIds;
 
-public readonly record struct UserId(Guid Value)
-{
-    public static UserId New() => new(Guid.NewGuid());
-    public static UserId From(Guid id) => new(id);
-    public static UserId From(string id) => new(Guid.Parse(id));
-    public static UserId Empty() => new(Guid.Empty);
-    public override string ToString() => Value.ToString();
+namespace SharedKernel.ValueObjects.StronglyTypedIds;
 
-
-    public static implicit operator Guid(UserId id) => id.Value;
-    public static explicit operator UserId(Guid id) => From(id);
-}
+[StronglyTypedId]
+public partial struct UserId;

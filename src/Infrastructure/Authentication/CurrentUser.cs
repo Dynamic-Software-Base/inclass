@@ -1,4 +1,5 @@
-﻿using SharedKernel;
+﻿using Domain.Users;
+using SharedKernel;
 using SharedKernel.Enums;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 

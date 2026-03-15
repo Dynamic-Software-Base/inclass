@@ -2,6 +2,8 @@ using Application.Invitations.Commands.GenerateInvitation;
 using Application.Invitations.Commands.ResendInvitation;
 using Application.Invitations.Commands.RevokeInvitation;
 using Application.Invitations.Contracts;
+using Domain.Invitations;
+using Domain.Schools;
 using ErrorOr;
 using Infrastructure.Authorization;
 using MediatR;

@@ -48,6 +48,7 @@ public static class DependencyInjection
         services.AddScoped<IMemberShipReposiory, MemberShipRepository>();
         services.AddScoped<ISchoolRepository, SchoolRepository>();
         services.AddHttpClient<IGeoCodingService, GoogleGeocodingService>();
+        services.AddScoped<IEducationalSystemRepository, EducationalSystemRepository>();
         return services;
     }
 

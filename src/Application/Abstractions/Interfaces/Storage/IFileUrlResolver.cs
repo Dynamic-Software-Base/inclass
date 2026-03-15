@@ -1,4 +1,5 @@
-﻿using SharedKernel.ValueObjects.StronglyTypedIds;
+﻿using Domain.File;
+using SharedKernel.ValueObjects.StronglyTypedIds;
 
 namespace Application.Abstractions.Interfaces.Storage;
 

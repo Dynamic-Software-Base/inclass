@@ -24,6 +24,132 @@ namespace Infrastructure.Database.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Domain.EducationalSystem.EducationalSystem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("code");
+
+                    b.Property<string>("Name_Ar")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name_ar");
+
+                    b.Property<string>("Name_Fr")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name_fr");
+
+                    b.HasKey("Id")
+                        .HasName("pk_educational_systems");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_educational_systems_code");
+
+                    b.ToTable("educational_systems", "public");
+                });
+
+            modelBuilder.Entity("Domain.EducationalSystem.Entities.GradeCycleDefinition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("BroadLevel")
+                        .HasColumnType("integer")
+                        .HasColumnName("broad_level");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("code");
+
+                    b.Property<Guid>("EducationalSystemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("educational_system_id");
+
+                    b.Property<string>("Name_Ar")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name_ar");
+
+                    b.Property<string>("Name_Fr")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name_fr");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.HasKey("Id")
+                        .HasName("pk_grade_cycle_definitions");
+
+                    b.HasIndex("EducationalSystemId")
+                        .HasDatabaseName("ix_grade_cycle_definitions_educational_system_id");
+
+                    b.ToTable("grade_cycle_definitions", "public");
+                });
+
+            modelBuilder.Entity("Domain.EducationalSystem.Entities.GradeDefinition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("code");
+
+                    b.Property<Guid>("GradeCycleDefinitionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("grade_cycle_definition_id");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name_Ar")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name_ar");
+
+                    b.Property<string>("Name_Fr")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name_fr");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.HasKey("Id")
+                        .HasName("pk_grade_definitions");
+
+                    b.HasIndex("GradeCycleDefinitionId")
+                        .HasDatabaseName("ix_grade_definitions_grade_cycle_definition_id");
+
+                    b.ToTable("grade_definitions", "public");
+                });
+
             modelBuilder.Entity("Domain.File.StoredFile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -205,6 +331,10 @@ namespace Infrastructure.Database.Migrations
                         .HasColumnType("character varying(1000)")
                         .HasColumnName("description");
 
+                    b.Property<Guid>("EducationalSystemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("educational_system_id");
+
                     b.Property<DateTimeOffset?>("LastModifiedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_modified_at");
@@ -234,6 +364,9 @@ namespace Infrastructure.Database.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_schools");
+
+                    b.HasIndex("EducationalSystemId")
+                        .HasDatabaseName("ix_schools_educational_system_id");
 
                     b.HasIndex("Name")
                         .HasDatabaseName("ix_schools_name");
@@ -336,8 +469,69 @@ namespace Infrastructure.Database.Migrations
                     b.ToTable("users", "public");
                 });
 
+            modelBuilder.Entity("Domain.EducationalSystem.Entities.GradeCycleDefinition", b =>
+                {
+                    b.HasOne("Domain.EducationalSystem.EducationalSystem", null)
+                        .WithMany("Cycles")
+                        .HasForeignKey("EducationalSystemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_grade_cycle_definitions_educational_systems_educational_sys");
+                });
+
+            modelBuilder.Entity("Domain.EducationalSystem.Entities.GradeDefinition", b =>
+                {
+                    b.HasOne("Domain.EducationalSystem.Entities.GradeCycleDefinition", "Cycle")
+                        .WithMany("Grades")
+                        .HasForeignKey("GradeCycleDefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_grade_definitions_grade_cycle_definitions_grade_cycle_defin");
+
+                    b.Navigation("Cycle");
+                });
+
             modelBuilder.Entity("Domain.Schools.School", b =>
                 {
+                    b.HasOne("Domain.EducationalSystem.EducationalSystem", null)
+                        .WithMany()
+                        .HasForeignKey("EducationalSystemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_schools_educational_systems_educational_system_id");
+
+                    b.OwnsMany("Domain.Schools.Entities.SchoolSupportedGrade", "SupportedGrades", b1 =>
+                        {
+                            b1.Property<Guid>("SchoolId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("school_id");
+
+                            b1.Property<Guid>("GradeDefinitionId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("grade_definition_id");
+
+                            b1.Property<int>("CachedBroadLevel")
+                                .HasColumnType("integer")
+                                .HasColumnName("cached_broad_level");
+
+                            b1.Property<int?>("Capacity")
+                                .HasColumnType("integer")
+                                .HasColumnName("capacity");
+
+                            b1.Property<bool>("IsOffered")
+                                .HasColumnType("boolean")
+                                .HasColumnName("is_offered");
+
+                            b1.HasKey("SchoolId", "GradeDefinitionId")
+                                .HasName("pk_school_supported_grades");
+
+                            b1.ToTable("school_supported_grades", "public");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SchoolId")
+                                .HasConstraintName("fk_school_supported_grades_schools_school_id");
+                        });
+
                     b.OwnsOne("SharedKernel.ValueObjects.Schools.SchoolContactInfo", "ContactInfo", b1 =>
                         {
                             b1.Property<Guid>("SchoolId")
@@ -498,6 +692,18 @@ namespace Infrastructure.Database.Migrations
                         .IsRequired();
 
                     b.Navigation("Pictures");
+
+                    b.Navigation("SupportedGrades");
+                });
+
+            modelBuilder.Entity("Domain.EducationalSystem.EducationalSystem", b =>
+                {
+                    b.Navigation("Cycles");
+                });
+
+            modelBuilder.Entity("Domain.EducationalSystem.Entities.GradeCycleDefinition", b =>
+                {
+                    b.Navigation("Grades");
                 });
 #pragma warning restore 612, 618
         }

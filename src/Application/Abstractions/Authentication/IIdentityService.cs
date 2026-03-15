@@ -1,4 +1,5 @@
-﻿using SharedKernel.Enums;
+﻿using Domain.Schools;
+using SharedKernel.Enums;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 
 namespace Application.Abstractions.Authentication;

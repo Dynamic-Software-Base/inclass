@@ -4,6 +4,7 @@ using Application.Common;
 using Application.Common.Settings.Storage;
 using Application.Files;
 using Domain.File;
+using Domain.Users;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SharedKernel.ValueObjects.StronglyTypedIds;

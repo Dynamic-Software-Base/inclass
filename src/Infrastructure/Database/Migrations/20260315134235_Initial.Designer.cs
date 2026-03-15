@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260223154753_Add_Address_Contact_GradeLevelToSchoolTable")]
-    partial class Add_Address_Contact_GradeLevelToSchoolTable
+    [Migration("20260315134235_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,6 +26,212 @@ namespace Infrastructure.Database.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Domain.EducationalSystem.EducationalSystem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("code");
+
+                    b.Property<string>("Name_Ar")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name_ar");
+
+                    b.Property<string>("Name_Fr")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name_fr");
+
+                    b.HasKey("Id")
+                        .HasName("pk_educational_systems");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_educational_systems_code");
+
+                    b.ToTable("educational_systems", "public");
+                });
+
+            modelBuilder.Entity("Domain.EducationalSystem.Entities.GradeCycleDefinition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("BroadLevel")
+                        .HasColumnType("integer")
+                        .HasColumnName("broad_level");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("code");
+
+                    b.Property<Guid>("EducationalSystemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("educational_system_id");
+
+                    b.Property<string>("Name_Ar")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name_ar");
+
+                    b.Property<string>("Name_Fr")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name_fr");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.HasKey("Id")
+                        .HasName("pk_grade_cycle_definitions");
+
+                    b.HasIndex("EducationalSystemId")
+                        .HasDatabaseName("ix_grade_cycle_definitions_educational_system_id");
+
+                    b.ToTable("grade_cycle_definitions", "public");
+                });
+
+            modelBuilder.Entity("Domain.EducationalSystem.Entities.GradeDefinition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("code");
+
+                    b.Property<Guid>("GradeCycleDefinitionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("grade_cycle_definition_id");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name_Ar")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name_ar");
+
+                    b.Property<string>("Name_Fr")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name_fr");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.HasKey("Id")
+                        .HasName("pk_grade_definitions");
+
+                    b.HasIndex("GradeCycleDefinitionId")
+                        .HasDatabaseName("ix_grade_definitions_grade_cycle_definition_id");
+
+                    b.ToTable("grade_definitions", "public");
+                });
+
+            modelBuilder.Entity("Domain.File.StoredFile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("BlobPath")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("blob_path");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("content_type");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTimeOffset?>("LastModifiedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modified_at");
+
+                    b.Property<Guid>("LastModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("last_modified_by");
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("original_file_name");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_id");
+
+                    b.Property<long>("SizeInBytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("size_in_bytes");
+
+                    b.Property<string>("StorageProvider")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("storage_provider");
+
+                    b.Property<string>("StoredFileName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("stored_file_name");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("url");
+
+                    b.HasKey("Id")
+                        .HasName("pk_stored_files");
+
+                    b.HasIndex("OwnerId")
+                        .HasDatabaseName("ix_stored_files_owner_id");
+
+                    b.HasIndex("StoredFileName")
+                        .IsUnique()
+                        .HasDatabaseName("ix_stored_files_stored_file_name");
+
+                    b.ToTable("stored_files", "public");
+                });
 
             modelBuilder.Entity("Domain.Invitations.Invitation", b =>
                 {
@@ -114,8 +320,10 @@ namespace Infrastructure.Database.Migrations
                         .HasColumnName("ar_name");
 
                     b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid")
@@ -125,6 +333,10 @@ namespace Infrastructure.Database.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)")
                         .HasColumnName("description");
+
+                    b.Property<Guid>("EducationalSystemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("educational_system_id");
 
                     b.Property<DateTimeOffset?>("LastModifiedAt")
                         .HasColumnType("timestamp with time zone")
@@ -155,6 +367,9 @@ namespace Infrastructure.Database.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_schools");
+
+                    b.HasIndex("EducationalSystemId")
+                        .HasDatabaseName("ix_schools_educational_system_id");
 
                     b.HasIndex("Name")
                         .HasDatabaseName("ix_schools_name");
@@ -257,8 +472,69 @@ namespace Infrastructure.Database.Migrations
                     b.ToTable("users", "public");
                 });
 
+            modelBuilder.Entity("Domain.EducationalSystem.Entities.GradeCycleDefinition", b =>
+                {
+                    b.HasOne("Domain.EducationalSystem.EducationalSystem", null)
+                        .WithMany("Cycles")
+                        .HasForeignKey("EducationalSystemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_grade_cycle_definitions_educational_systems_educational_sys");
+                });
+
+            modelBuilder.Entity("Domain.EducationalSystem.Entities.GradeDefinition", b =>
+                {
+                    b.HasOne("Domain.EducationalSystem.Entities.GradeCycleDefinition", "Cycle")
+                        .WithMany("Grades")
+                        .HasForeignKey("GradeCycleDefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_grade_definitions_grade_cycle_definitions_grade_cycle_defin");
+
+                    b.Navigation("Cycle");
+                });
+
             modelBuilder.Entity("Domain.Schools.School", b =>
                 {
+                    b.HasOne("Domain.EducationalSystem.EducationalSystem", null)
+                        .WithMany()
+                        .HasForeignKey("EducationalSystemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_schools_educational_systems_educational_system_id");
+
+                    b.OwnsMany("Domain.Schools.Entities.SchoolSupportedGrade", "SupportedGrades", b1 =>
+                        {
+                            b1.Property<Guid>("SchoolId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("school_id");
+
+                            b1.Property<Guid>("GradeDefinitionId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("grade_definition_id");
+
+                            b1.Property<int>("CachedBroadLevel")
+                                .HasColumnType("integer")
+                                .HasColumnName("cached_broad_level");
+
+                            b1.Property<int?>("Capacity")
+                                .HasColumnType("integer")
+                                .HasColumnName("capacity");
+
+                            b1.Property<bool>("IsOffered")
+                                .HasColumnType("boolean")
+                                .HasColumnName("is_offered");
+
+                            b1.HasKey("SchoolId", "GradeDefinitionId")
+                                .HasName("pk_school_supported_grades");
+
+                            b1.ToTable("school_supported_grades", "public");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SchoolId")
+                                .HasConstraintName("fk_school_supported_grades_schools_school_id");
+                        });
+
                     b.OwnsOne("SharedKernel.ValueObjects.Schools.SchoolContactInfo", "ContactInfo", b1 =>
                         {
                             b1.Property<Guid>("SchoolId")
@@ -372,11 +648,65 @@ namespace Infrastructure.Database.Migrations
                             b1.Navigation("Coordinates");
                         });
 
+                    b.OwnsMany("SharedKernel.ValueObjects.Schools.SchoolPicture", "Pictures", b1 =>
+                        {
+                            b1.Property<int>("id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer")
+                                .HasColumnName("id");
+
+                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("id"));
+
+                            b1.Property<string>("AltText")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)")
+                                .HasColumnName("alt_text");
+
+                            b1.Property<bool>("IsMain")
+                                .HasColumnType("boolean")
+                                .HasColumnName("is_main");
+
+                            b1.Property<Guid>("StoredFileId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("stored_file_id");
+
+                            b1.Property<Guid>("school_id")
+                                .HasColumnType("uuid")
+                                .HasColumnName("school_id");
+
+                            b1.HasKey("id")
+                                .HasName("pk_school_pictures");
+
+                            b1.HasIndex("school_id", "StoredFileId")
+                                .IsUnique()
+                                .HasDatabaseName("ix_school_pictures_school_id_stored_file_id");
+
+                            b1.ToTable("school_pictures", "public");
+
+                            b1.WithOwner()
+                                .HasForeignKey("school_id")
+                                .HasConstraintName("fk_school_pictures_schools_school_id");
+                        });
+
                     b.Navigation("Address")
                         .IsRequired();
 
                     b.Navigation("ContactInfo")
                         .IsRequired();
+
+                    b.Navigation("Pictures");
+
+                    b.Navigation("SupportedGrades");
+                });
+
+            modelBuilder.Entity("Domain.EducationalSystem.EducationalSystem", b =>
+                {
+                    b.Navigation("Cycles");
+                });
+
+            modelBuilder.Entity("Domain.EducationalSystem.Entities.GradeCycleDefinition", b =>
+                {
+                    b.Navigation("Grades");
                 });
 #pragma warning restore 612, 618
         }

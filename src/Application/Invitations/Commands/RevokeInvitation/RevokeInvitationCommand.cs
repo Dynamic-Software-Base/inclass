@@ -1,3 +1,5 @@
+using Domain.Invitations;
+using Domain.Schools;
 using MediatR;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 

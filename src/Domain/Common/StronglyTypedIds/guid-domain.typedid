@@ -1,0 +1,10 @@
+partial struct PLACEHOLDERID
+{
+    public static PLACEHOLDERID From(global::System.Guid id) => new(id);
+
+    public static PLACEHOLDERID From(string id) => Parse(id, provider: null);
+
+    public static implicit operator global::System.Guid(PLACEHOLDERID id) => id.Value;
+
+    public static explicit operator PLACEHOLDERID(global::System.Guid id) => new(id);
+}

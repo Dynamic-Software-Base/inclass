@@ -1,7 +1,13 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="StronglyTypedId" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="Common\StronglyTypedIds\*.typedid" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\SharedKernel\SharedKernel.csproj" />
   </ItemGroup>
-
 </Project>

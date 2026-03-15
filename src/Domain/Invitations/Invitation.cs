@@ -1,4 +1,5 @@
 using Domain.Common;
+using Domain.Schools;
 using Domain.Users;
 using SharedKernel;
 using SharedKernel.Enums;

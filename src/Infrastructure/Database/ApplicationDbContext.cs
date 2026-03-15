@@ -1,4 +1,6 @@
 using Application.Abstractions.Data;
+using Domain.EducationalSystem;
+using Domain.EducationalSystem.Entities;
 using Domain.File;
 using Domain.Invitations;
 using Domain.Schools;
@@ -17,6 +19,9 @@ public sealed class ApplicationDbContext(
     public DbSet<School> Schools => Set<School>();
     public DbSet<UserSchoolMembership> UserSchoolMemberships => Set<UserSchoolMembership>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
+    public DbSet<EducationalSystem>      EducationalSystems      { get; set; }
+    public DbSet<GradeCycleDefinition>   GradeCycleDefinitions   { get; set; }
+    public DbSet<GradeDefinition>        GradeDefinitions        { get; set; }
     public DbSet<StoredFile> StoredFiles => Set<StoredFile>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

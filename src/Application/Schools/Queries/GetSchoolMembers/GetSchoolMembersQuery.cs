@@ -1,4 +1,5 @@
 using Application.Schools.Contracts;
+using Domain.Schools;
 using MediatR;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 

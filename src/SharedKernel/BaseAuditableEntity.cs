@@ -24,6 +24,6 @@ where TId : notnull
     {
         CreatedAt = DateTimeOffset.UtcNow;
         CreatedBy = createdBy;
-        LastModifiedBy = UserId.Empty();
+        LastModifiedBy = UserId.Empty;
     }
 }

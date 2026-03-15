@@ -1,4 +1,5 @@
 ﻿using Application.Abstractions.Interfaces.Repositories;
+using Domain.File;
 using FluentValidation;
 using SharedKernel.ValueObjects.Schools;
 using SharedKernel.ValueObjects.StronglyTypedIds;
@@ -67,9 +68,6 @@ public class CreateSchoolCommandValidator : AbstractValidator<CreateSchoolComman
 
 
 
-        RuleFor(x => x.GradeLevels)
-            .NotNull()
-            .SetValidator(new CreateGradeLevelOfferingValidator());
 
         RuleForEach(s => s.Pictures)
             .ChildRules(picture =>
@@ -141,18 +139,4 @@ public class CreateSchoolAddressValidator : AbstractValidator<CreateSchoolAddres
 
 
     }
-}
-
-public class CreateGradeLevelOfferingValidator : AbstractValidator<CreateSchoolGradeLevelOffering>
-{
-    public CreateGradeLevelOfferingValidator()
-    {
-        RuleFor(g => g)
-            .Must(AtLeastOneSelected)
-            .WithMessage("At least one grade level is required");
-    }
-
-    private static bool AtLeastOneSelected(CreateSchoolGradeLevelOffering gradeLevels) =>
-        gradeLevels.hasPreSchool || gradeLevels.hasHighSchool || gradeLevels.hasMiddleSchool ||
-        gradeLevels.hasPrimarySchool;
 }

@@ -1,4 +1,6 @@
+using Domain.File;
 using Domain.Schools;
+using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SharedKernel.ValueObjects;
@@ -28,6 +30,12 @@ internal sealed class SchoolConfiguration : IEntityTypeConfiguration<School>
                 userId => userId.Value,
                 value => UserId.From(value));
 
+        builder.Property(school => school.EducationalSystemId)
+            .HasColumnName("educational_system_id")
+            .HasConversion(
+                id => id.Value,
+                value => EducationalSystemId.From(value)
+            );
         builder.Property(school => school.CreatedBy)
             .HasColumnName("created_by")
             .HasConversion(
@@ -166,6 +174,21 @@ internal sealed class SchoolConfiguration : IEntityTypeConfiguration<School>
             gradeLevelsBuilder.Property(g => g.Levels)
                 .HasColumnName("grade_levels")
                 .HasConversion<int>();
+        });
+
+        builder.OwnsMany(s => s.SupportedGrades, sg =>
+        {
+            sg.ToTable("school_supported_grades");
+            sg.WithOwner().HasForeignKey(s => s.SchoolId);
+            sg.Property(x => x.SchoolId)
+                .HasConversion(id => id.Value, v => SchoolId.From(v));
+            sg.Property(x => x.GradeDefinitionId)
+                .HasConversion(id => id.Value, v => new GradeDefinitionId(v));
+
+            sg.Property(x => x.CachedBroadLevel)
+                .HasColumnName("cached_broad_level")
+                .HasConversion<int>();
+            sg.HasKey(x => new { x.SchoolId, x.GradeDefinitionId });
         });
 
         builder.Ignore(school => school.DomainEvents);

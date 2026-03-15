@@ -1,3 +1,4 @@
+using Domain.Schools;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SharedKernel.ValueObjects.StronglyTypedIds;

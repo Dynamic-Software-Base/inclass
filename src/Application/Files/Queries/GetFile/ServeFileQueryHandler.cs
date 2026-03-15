@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions.Interfaces.Repositories;
 using Application.Abstractions.Interfaces.Storage;
+using Domain.File;
 using MediatR;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 

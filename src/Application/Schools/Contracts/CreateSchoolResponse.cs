@@ -1,3 +1,4 @@
+using Domain.Schools;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 
 namespace Application.Schools.Contracts;

@@ -1,4 +1,5 @@
 ﻿using Domain.File;
+using Domain.Users;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 
 namespace Application.Abstractions.Interfaces.Repositories;

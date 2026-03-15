@@ -1,3 +1,4 @@
+using Domain.Schools;
 using SharedKernel.Enums;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 

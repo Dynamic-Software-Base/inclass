@@ -1,4 +1,5 @@
 using Domain.Schools;
+using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SharedKernel.ValueObjects.StronglyTypedIds;

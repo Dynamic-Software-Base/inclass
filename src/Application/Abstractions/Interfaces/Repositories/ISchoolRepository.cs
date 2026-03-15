@@ -4,6 +4,7 @@ using Contract.InClass.Pagination;
 using Contract.InClass.Response;
 using Contract.InClass.Response.School;
 using Domain.Schools;
+using Domain.Users;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 
 namespace Application.Abstractions.Interfaces.Repositories;

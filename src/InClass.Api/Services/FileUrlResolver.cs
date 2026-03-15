@@ -1,4 +1,5 @@
 ﻿using Application.Abstractions.Interfaces.Storage;
+using Domain.File;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 
 namespace Web.Api.Services;

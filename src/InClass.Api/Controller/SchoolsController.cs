@@ -8,6 +8,7 @@ using Contract.InClass.Pagination;
 using Contract.InClass.Request.School;
 using Contract.InClass.Response;
 using Contract.InClass.Response.School;
+using Domain.Schools;
 using ErrorOr;
 using Infrastructure.Authorization;
 using MediatR;
