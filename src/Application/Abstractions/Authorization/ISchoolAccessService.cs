@@ -1,3 +1,5 @@
+using Domain.Schools;
+using Domain.Users;
 using SharedKernel.Enums;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 

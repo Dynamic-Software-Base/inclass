@@ -4,9 +4,9 @@
 public enum GradeLevel
 {
     None          = 0,
-    PreSchool     = 1,
-    PrimarySchool = 2,
-    MiddleSchool  = 4,
-    HighSchool    = 8
+    Prescolaire     = 1,
+    Primaire = 2,
+    Collegial  = 4,
+    Lyceen    = 8
 }
 

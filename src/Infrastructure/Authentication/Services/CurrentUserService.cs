@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using Application.Abstractions.Authentication;
+using Domain.Users;
 using Microsoft.AspNetCore.Http;
 using SharedKernel;
 using SharedKernel.Enums;

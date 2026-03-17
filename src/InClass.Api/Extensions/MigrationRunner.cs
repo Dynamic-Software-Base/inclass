@@ -19,7 +19,7 @@ public static class MigrationRunner
             LogMessages.NoMigrationFound(logger);
             return;
         }
-       LogMessages.Migrating(logger);
+        LogMessages.Migrating(logger);
         foreach (string m in pending)
         {
            LogMessages.LogPendingMigrationNames(logger, m);
@@ -27,5 +27,7 @@ public static class MigrationRunner
 
         await dbContext.Database.MigrateAsync();
        LogMessages.MigratingCompleted(logger);
+
+
     }
 }

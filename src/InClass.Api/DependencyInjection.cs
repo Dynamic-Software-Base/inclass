@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions.Interfaces.Storage;
 using Application.Common.Settings.Storage;
+using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 using Web.Api.Services;
 
@@ -12,7 +13,7 @@ public static class DependencyInjection
         services.AddSettings(configuration);
         services.AddApiServices();
         services.AddEndpointsApiExplorer();
-
+        services.AddSeedingService();
         // REMARK: If you want to use Controllers, you'll need this.
         services.AddControllers();
 

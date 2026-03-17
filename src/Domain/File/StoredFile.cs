@@ -1,9 +1,9 @@
-﻿using SharedKernel;
+using SharedKernel;
 using SharedKernel.ValueObjects.StronglyTypedIds;
 
 namespace Domain.File;
 
-public class StoredFile : AggregateRoot<StoredFile,StoredFileId>
+public class StoredFile : AggregateRoot<StoredFile, StoredFileId>
 {
     public UserId OwnerId { get; private set; }
     public string OriginalFileName { get; private set; } = string.Empty;
@@ -14,7 +14,9 @@ public class StoredFile : AggregateRoot<StoredFile,StoredFileId>
     public string StorageProvider { get; private set; } = string.Empty;
     public string? BlobPath { get; private set; }
 
-    private StoredFile() : base() { }
+    private StoredFile() : base()
+    {
+    }
 
     private StoredFile(
         StoredFileId id,
@@ -25,7 +27,7 @@ public class StoredFile : AggregateRoot<StoredFile,StoredFileId>
         long sizeInBytes,
         string url,
         string storageProvider,
-        string? blobPath) : base(id,ownerId)
+        string? blobPath) : base(id, ownerId)
     {
         OwnerId = ownerId;
         OriginalFileName = originalFileName;

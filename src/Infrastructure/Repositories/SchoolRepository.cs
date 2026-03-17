@@ -7,6 +7,7 @@ using Contract.InClass.Pagination;
 using Contract.InClass.Response;
 using Contract.InClass.Response.School;
 using Domain.Schools;
+using Domain.Users;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel.Enums;
@@ -88,19 +89,19 @@ public class SchoolRepository : ISchoolRepository
             GradeLevel filter = GradeLevel.None;
             if (query.GradeLevel.HasPreSchool)
             {
-                filter |= GradeLevel.PreSchool;
+                filter |= GradeLevel.Prescolaire;
             }
             if (query.GradeLevel.HasPrimarySchool)
             {
-                filter |= GradeLevel.PrimarySchool;
+                filter |= GradeLevel.Primaire;
             }
             if (query.GradeLevel.HasHighSchool)
             {
-                filter |= GradeLevel.HighSchool;
+                filter |= GradeLevel.Lyceen;
             }
             if (query.GradeLevel.HasMiddleSchool)
             {
-                filter |= GradeLevel.MiddleSchool;
+                filter |= GradeLevel.Collegial;
             }
             //The `(Levels & filter) == filter` pattern means "school must offer ALL the requested levels" — change to `!= GradeLevel.None` if you want "school offers ANY of the requested levels".
             q = q.Where(s => (s.GradeLevels.Levels & filter) == filter);

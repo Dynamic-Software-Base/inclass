@@ -21,4 +21,12 @@
 	<InternalsVisibleTo Include="Application.UnitTests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="nuget.config">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

@@ -1,4 +1,5 @@
 using Application.Abstractions.Authentication;
+using Domain.Schools;
 using Keycloak.AuthServices.Sdk.Admin;
 using Keycloak.AuthServices.Sdk.Admin.Models;
 using Keycloak.AuthServices.Sdk.Admin.Requests.Users;

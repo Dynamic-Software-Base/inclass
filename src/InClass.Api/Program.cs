@@ -3,6 +3,7 @@ using Application;
 using Application.Abstractions.Authentication;
 using HealthChecks.UI.Client;
 using Infrastructure;
+using Infrastructure.Database;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 using Web.Api;
@@ -43,9 +44,18 @@ if (app.Environment.IsDevelopment())
 if (args.Contains("--migrate"))
 {
     await MigrationRunner.RunMigrationAsync(app.Services);
+
     return;
 }
 
+if (args.Contains("--seed"))
+{
+    using IServiceScope scope = app.Services.CreateScope();
+    DatabaseSeeder seeder = scope.ServiceProvider
+        .GetRequiredService<DatabaseSeeder>();
+    await seeder.SeedAllAsync();
+    return;
+}
 app.MapHealthChecks("health", new HealthCheckOptions
 {
     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse

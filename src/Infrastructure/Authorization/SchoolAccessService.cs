@@ -1,4 +1,6 @@
 using Application.Abstractions.Authorization;
+using Domain.Schools;
+using Domain.Users;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel.Enums;

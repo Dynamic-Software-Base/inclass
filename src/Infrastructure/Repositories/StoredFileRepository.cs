@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions.Interfaces.Repositories;
 using Domain.File;
+using Domain.Users;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel.ValueObjects.Schools;

@@ -27,9 +27,41 @@ public static class DomainErrors
     {
         public static Error InvalidEmailAddress => Error.Validation("email", "Invalid email address");
     }
-    public static class SchoolError
+    public static class SchoolErrors
     {
+        public static readonly Error GradeBelongsToDifferentEducationSystem = Error.Validation(
+            "School.GradeBelongsToDifferentEducationSystem",
+            "The grade definition does not belong to this school's education system.");
 
+        public static readonly Error GradeDefinitionIsInactive = Error.Validation(
+            "School.GradeDefinitionIsInactive",
+            "Cannot add an inactive grade definition to a school.");
+
+        public static readonly Error OneOrMoreGradeDefinitionsNotFound = Error.Validation(
+            "School.OneOrMoreGradeDefinitionsNotFound",
+            "One or more grade definitions not found.");
+
+        public static readonly Error GradeAlreadySupported = Error.Conflict(
+            "School.GradeAlreadySupported",
+            "This grade is already declared as supported by this school.");
+
+        public static readonly Error GradeNotFound = Error.NotFound(
+            "School.GradeNotFound",
+            "The specified grade is not in this school's supported grades.");
     }
 
+    public static class DateRangeErrors
+    {
+        public static Error EndsMussBeAfterStart => Error.Validation(
+            code: "Domain.DateRange.EndsMussBeAfterStart",
+            description: "ends date must be after start date"
+        );
+    }
+
+    public static class EducationalSystemErrors
+    {
+        public static readonly Error NotFound = Error.NotFound(
+            "EducationalSystem.NotFound",
+            "Educational system not found");
+    }
 }

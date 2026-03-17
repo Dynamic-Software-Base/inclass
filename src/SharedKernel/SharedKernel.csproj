@@ -2,5 +2,10 @@
   <ItemGroup>
     <PackageReference Include="ErrorOr" />
     <PackageReference Include="MediatR.Contracts" />
+    <PackageReference Include="StronglyTypedId" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="Common\StronglyTypedIds\*.typedid" />
   </ItemGroup>
 </Project>
