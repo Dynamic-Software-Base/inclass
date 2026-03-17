@@ -45,7 +45,7 @@ public class CreateSchoolCommandValidator : AbstractValidator<CreateSchoolComman
 
         RuleFor(s => s.Description)
             .MaximumLength(MaxSchoolDescription).WithMessage($"School description must be no more than {MaxSchoolDescription} characters long")
-            .When(s => !string.IsNullOrEmpty(s.Ar_Name));
+            .When(s => !string.IsNullOrEmpty(s.Description));
 
         RuleFor(s => s.Address)
             .NotNull().WithMessage("Address is required")
@@ -67,7 +67,8 @@ public class CreateSchoolCommandValidator : AbstractValidator<CreateSchoolComman
             .When(s => !string.IsNullOrEmpty(s.ContactInfo.SecondaryPhoneNumber));
 
 
-
+        RuleFor(s => s.SupportedGradeIds)
+            .NotNull() .Must(list => list.Count > 0);
 
         RuleForEach(s => s.Pictures)
             .ChildRules(picture =>
