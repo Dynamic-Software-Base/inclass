@@ -13,6 +13,7 @@ public class EducationSystemConfiguration : IEntityTypeConfiguration<Educational
         builder.ToTable("educational_systems");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id)
+            .HasColumnName("id")
             .HasConversion(id => id.Value, v => EducationalSystemId.From(v))
             .ValueGeneratedNever();
 

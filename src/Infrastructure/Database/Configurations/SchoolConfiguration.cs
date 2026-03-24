@@ -181,13 +181,20 @@ internal sealed class SchoolConfiguration : IEntityTypeConfiguration<School>
             sg.ToTable("school_supported_grades");
             sg.WithOwner().HasForeignKey(s => s.SchoolId);
             sg.Property(x => x.SchoolId)
+                .HasColumnName("school_id")
                 .HasConversion(id => id.Value, v => SchoolId.From(v));
             sg.Property(x => x.GradeDefinitionId)
+                .HasColumnName("grade_definition_id")
                 .HasConversion(id => id.Value, v => new GradeDefinitionId(v));
 
             sg.Property(x => x.CachedBroadLevel)
                 .HasColumnName("cached_broad_level")
                 .HasConversion<int>();
+            sg.Property(x => x.Capacity)
+                .HasColumnName("capacity")
+                .HasConversion<int>();
+            sg.Property(x => x.IsOffered)
+                .HasColumnName("is_offered");
             sg.HasKey(x => new { x.SchoolId, x.GradeDefinitionId });
         });
 
@@ -199,8 +206,5 @@ internal sealed class SchoolConfiguration : IEntityTypeConfiguration<School>
         builder.HasIndex(s => s.Name)
             .HasDatabaseName("ix_schools_name");
 
-        builder.HasIndex(s => new { s.OwnerUserId, s.Name })
-            .IsUnique()
-            .HasDatabaseName("ix_schools_owner_name_unique");
     }
 }

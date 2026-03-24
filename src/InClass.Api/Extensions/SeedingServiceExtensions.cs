@@ -18,6 +18,7 @@ public static class SeedingServiceExtensions
 
         // Register each seeder — DI resolves them all when DatabaseSeeder calls GetServices<ISeeder>()
         services.AddScoped<ISeeder, MoroccanEducationSystemSeeder>();
+        services.AddScoped<ISeeder, RegistrationFormSchemaSeeder>();
 
         // Future seeders registered here:
         // services.AddScoped<ISeeder, RoleSeeder>();

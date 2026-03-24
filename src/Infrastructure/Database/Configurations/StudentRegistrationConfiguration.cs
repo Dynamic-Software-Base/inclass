@@ -120,13 +120,11 @@ public sealed class StudentRegistrationConfiguration
             .IsRequired();
 
         builder.Property(x => x.LastModifiedAt)
-            .HasColumnName("last_modified_at")
-            .IsRequired(false);
+            .HasColumnName("last_modified_at");
 
         builder.Property(x => x.LastModifiedBy)
             .HasColumnName("last_modified_by")
-            .HasConversion(id => id.Value, value => UserId.From(value))
-            .IsRequired(false);
+            .HasConversion(id => id.Value, value => UserId.From(value));
 
         // ── Indexes ───────────────────────────────────────────────────────────
         builder.HasIndex(x => x.SessionId)

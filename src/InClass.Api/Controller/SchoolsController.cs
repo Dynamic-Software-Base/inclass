@@ -4,6 +4,7 @@ using Application.Schools.Queries.GetNearestSchools;
 using Application.Schools.Queries.GetOwnerSchools;
 using Application.Schools.Queries.GetSchoolMembers;
 using Application.Schools.Queries.GetSchools;
+using Application.Schools.Queries.GetSwitcherSchoolData;
 using Contract.InClass.Pagination;
 using Contract.InClass.Request.School;
 using Contract.InClass.Response;
@@ -79,6 +80,12 @@ public sealed class SchoolsController : ApiBaseController
     public async Task<IActionResult> GetMySchools(CancellationToken cancellationToken)
     {
         return ToApiResponse(await _sender.Send(new GetOwnerSchoolsQuery(), cancellationToken));
+    }
+    [HttpGet("globalSchoolInfo")]
+    [Authorize]
+    public async Task<IActionResult> GetGlobalSchoolInfo(CancellationToken cancellationToken)
+    {
+        return ToApiResponse(await _sender.Send(new GetSwitcherSchoolDataQuery(), cancellationToken));
     }
 
     [HttpGet("/schools/nearest")]

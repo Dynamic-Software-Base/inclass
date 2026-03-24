@@ -2,6 +2,7 @@ using System.Text;
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Authorization;
 using Application.Abstractions.Data;
+using Application.Abstractions.Interfaces;
 using Application.Abstractions.Interfaces.Repositories;
 using Application.Abstractions.Interfaces.Services;
 using Infrastructure.Authentication;
@@ -49,6 +50,7 @@ public static class DependencyInjection
         services.AddScoped<ISchoolRepository, SchoolRepository>();
         services.AddHttpClient<IGeoCodingService, GoogleGeocodingService>();
         services.AddScoped<IEducationalSystemRepository, EducationalSystemRepository>();
+        services.AddScoped<IRegistrationFormSchemaRepository, RegistrationFormSchemaRepository>();
         return services;
     }
 
@@ -63,7 +65,7 @@ public static class DependencyInjection
                 .UseSnakeCaseNamingConvention());
 
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
-
+        services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
         return services;
     }
 

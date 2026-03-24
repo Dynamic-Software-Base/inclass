@@ -28,8 +28,12 @@ public sealed class RegistrationFormSchemaConfiguration
         // SchoolId is nullable — null means this is the default MEN schema
         builder.Property(x => x.SchoolId)
             .HasColumnName("school_id")
-            .HasConversion(id => id!.Value, value => SchoolId.From(value))
+            .HasConversion(
+                id => id == null ? (Guid?)null : id.Value,
+                value => value == null ? null : SchoolId.From(value.Value)
+            )
             .IsRequired(false);
+
 
         builder.Property(x => x.GradeDefinitionId)
             .HasColumnName("grade_definition_id")
@@ -73,13 +77,11 @@ public sealed class RegistrationFormSchemaConfiguration
             .IsRequired();
 
         builder.Property(x => x.LastModifiedAt)
-            .HasColumnName("last_modified_at")
-            .IsRequired(false);
+            .HasColumnName("last_modified_at");
 
         builder.Property(x => x.LastModifiedBy)
             .HasColumnName("last_modified_by")
-            .HasConversion(id => id.Value, value => UserId.From(value))
-            .IsRequired(false);
+            .HasConversion(id => id.Value, value => UserId.From(value));
 
         // ── Indexes ───────────────────────────────────────────────────────────
 

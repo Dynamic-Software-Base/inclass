@@ -13,7 +13,7 @@ public sealed record ApplicantContact
         Email = email;
         PhoneNumber = phoneNumber;
     }
-
+    private ApplicantContact() { }
     public static ErrorOr<ApplicantContact> Create(Email? email, PhoneNumber? phoneNumber)
     {
         if (email is null && phoneNumber is null)

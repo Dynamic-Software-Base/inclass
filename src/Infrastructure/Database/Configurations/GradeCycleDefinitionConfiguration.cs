@@ -12,6 +12,7 @@ public class GradeCycleDefinitionConfiguration : IEntityTypeConfiguration<GradeC
         builder.ToTable("grade_cycle_definitions");
         builder.HasKey(gc => gc.Id);
         builder.Property(gc => gc.Id)
+            .HasColumnName("id")
             .HasConversion(id => id.Value, v => GradeCycleDefinitionId.From(v))
             .ValueGeneratedNever();
         builder.Property(gc => gc.EducationalSystemId)
