@@ -15,7 +15,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Application\Application.csproj" />
   </ItemGroup>
-
+  <ItemGroup>
+    <EmbeddedResource Include="Schemas\*.json" />
+  </ItemGroup>
   <ItemGroup>
 	<InternalsVisibleTo Include="ArchitectureTests" />
   </ItemGroup>

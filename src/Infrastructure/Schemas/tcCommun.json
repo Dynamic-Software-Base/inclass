@@ -1,0 +1,267 @@
+{
+  "schemaCode": "LYC_TC",
+  "title": "Tronc Commun",
+  "version": 1,
+  "sections": [
+    {
+      "key": "reg_type",
+      "title": "Type d'inscription",
+      "sortOrder": 1,
+      "displayCondition": null,
+      "fields": [
+        {
+          "key": "is_re_registration",
+          "label": "Réinscription",
+          "fieldType": "boolean",
+          "isRequired": true,
+          "sortOrder": 1,
+          "placeholder": null,
+          "hint": "Cochez si l'élève était déjà inscrit l'année précédente",
+          "options": null,
+          "displayCondition": null
+        }
+      ]
+    },
+    {
+      "key": "personal",
+      "title": "Informations de l'élève",
+      "sortOrder": 2,
+      "displayCondition": null,
+      "fields": [
+        {
+          "key": "first_name_fr",
+          "label": "Prénom (en français)",
+          "fieldType": "text",
+          "isRequired": true,
+          "sortOrder": 1,
+          "placeholder": "Prénom de l'élève",
+          "hint": null,
+          "options": null,
+          "displayCondition": null
+        },
+        {
+          "key": "last_name",
+          "label": "Nom de famille",
+          "fieldType": "text",
+          "isRequired": true,
+          "sortOrder": 2,
+          "placeholder": "Nom de famille de l'élève",
+          "hint": null,
+          "options": null,
+          "displayCondition": null
+        },
+        {
+          "key": "date_of_birth",
+          "label": "Date de naissance",
+          "fieldType": "date",
+          "isRequired": true,
+          "sortOrder": 3,
+          "placeholder": null,
+          "hint": null,
+          "options": null,
+          "displayCondition": null
+        },
+        {
+          "key": "gender",
+          "label": "Sexe",
+          "fieldType": "select",
+          "isRequired": true,
+          "sortOrder": 4,
+          "placeholder": null,
+          "hint": null,
+          "options": [
+            {
+              "value": "male",
+              "label": "Masculin"
+            },
+            {
+              "value": "female",
+              "label": "Féminin"
+            }
+          ],
+          "displayCondition": null
+        },
+        {
+          "key": "national_id",
+          "label": "Identifiant national",
+          "fieldType": "text",
+          "isRequired": true,
+          "sortOrder": 5,
+          "placeholder": "Code MASSAR ou CIN",
+          "hint": "Numéro MASSAR pour les élèves ou CIN pour les adultes",
+          "options": null,
+          "displayCondition": null
+        }
+      ]
+    },
+    {
+      "key": "parent",
+      "title": "Informations du parent / tuteur",
+      "sortOrder": 3,
+      "displayCondition": null,
+      "fields": [
+        {
+          "key": "parent_full_name",
+          "label": "Nom complet du parent / tuteur",
+          "fieldType": "text",
+          "isRequired": true,
+          "sortOrder": 1,
+          "placeholder": "Nom et prénom",
+          "hint": null,
+          "options": null,
+          "displayCondition": null
+        },
+        {
+          "key": "parent_cin",
+          "label": "CIN du parent / tuteur",
+          "fieldType": "text",
+          "isRequired": true,
+          "sortOrder": 2,
+          "placeholder": "Numéro de la carte nationale d'identité",
+          "hint": null,
+          "options": null,
+          "displayCondition": null
+        },
+        {
+          "key": "parent_phone",
+          "label": "Téléphone du parent / tuteur",
+          "fieldType": "text",
+          "isRequired": true,
+          "sortOrder": 3,
+          "placeholder": "06XXXXXXXX",
+          "hint": null,
+          "options": null,
+          "displayCondition": null
+        },
+        {
+          "key": "parent_relationship",
+          "label": "Lien de parenté",
+          "fieldType": "select",
+          "isRequired": true,
+          "sortOrder": 4,
+          "placeholder": null,
+          "hint": null,
+          "options": [
+            {
+              "value": "father",
+              "label": "Père"
+            },
+            {
+              "value": "mother",
+              "label": "Mère"
+            },
+            {
+              "value": "guardian",
+              "label": "Tuteur Légal"
+            }
+          ],
+          "displayCondition": null
+        }
+      ]
+    },
+    {
+      "key": "health",
+      "title": "Informations médicales",
+      "sortOrder": 4,
+      "displayCondition": null,
+      "fields": [
+        {
+          "key": "has_medical_conditions",
+          "label": "L'élève a-t-il des antécédents médicaux ?",
+          "fieldType": "boolean",
+          "isRequired": true,
+          "sortOrder": 1,
+          "placeholder": null,
+          "hint": "Maladies chroniques, allergies, handicaps, etc.",
+          "options": null,
+          "displayCondition": null
+        },
+        {
+          "key": "medical_notes",
+          "label": "Précisions médicales",
+          "fieldType": "textarea",
+          "isRequired": false,
+          "sortOrder": 2,
+          "placeholder": "Décrivez les conditions médicales de l'élève",
+          "hint": "Ces informations resteront confidentielles",
+          "options": null,
+          "displayCondition": {
+            "field": "has_medical_conditions",
+            "operator": "eq",
+            "value": "true"
+          }
+        }
+      ]
+    },
+    {
+      "key": "previous_school",
+      "title": "École précédente",
+      "sortOrder": 5,
+      "displayCondition": {
+        "field": "is_re_registration",
+        "operator": "eq",
+        "value": "true"
+      },
+      "fields": [
+        {
+          "key": "previous_school_name",
+          "label": "Nom de l'école précédente",
+          "fieldType": "text",
+          "isRequired": true,
+          "sortOrder": 1,
+          "placeholder": "Nom de l'établissement",
+          "hint": null,
+          "options": null,
+          "displayCondition": null
+        },
+        {
+          "key": "last_year_average",
+          "label": "Moyenne de l'année précédente",
+          "fieldType": "number",
+          "isRequired": true,
+          "sortOrder": 2,
+          "placeholder": "Ex: 14.50",
+          "hint": "Note sur 20",
+          "options": null,
+          "displayCondition": null
+        }
+      ]
+    },
+    {
+      "key": "orientation",
+      "title": "Orientation scolaire",
+      "sortOrder": 6,
+      "displayCondition": null,
+      "fields": [
+        {
+          "key": "branch_preference",
+          "label": "Filière souhaitée",
+          "fieldType": "select",
+          "isRequired": false,
+          "sortOrder": 1,
+          "placeholder": null,
+          "hint": "Filière envisagée pour le Baccalauréat",
+          "options": [
+            {
+              "value": "sciences",
+              "label": "Sciences"
+            },
+            {
+              "value": "lettres",
+              "label": "Lettres"
+            },
+            {
+              "value": "technologie",
+              "label": "Technologie"
+            },
+            {
+              "value": "arts_appliques",
+              "label": "Arts Appliqués"
+            }
+          ],
+          "displayCondition": null
+        }
+      ]
+    }
+  ]
+}

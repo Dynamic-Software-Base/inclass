@@ -1,9 +1,12 @@
 using Application.Abstractions.Data;
+using Application.Abstractions.Interfaces;
 using Domain.EducationalSystem;
 using Domain.EducationalSystem.Entities;
 using Domain.File;
 using Domain.Invitations;
+using Domain.Registrations;
 using Domain.Schools;
+using Domain.Students;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -11,7 +14,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace Infrastructure.Database;
 
 public sealed class ApplicationDbContext(
-    DbContextOptions<ApplicationDbContext> options) : DbContext(options), IUnitOfWork
+    DbContextOptions<ApplicationDbContext> options) : DbContext(options), IUnitOfWork,IApplicationDbContext
 {
     private IDbContextTransaction? _currentTransaction;
 
@@ -23,6 +26,14 @@ public sealed class ApplicationDbContext(
     public DbSet<GradeCycleDefinition>   GradeCycleDefinitions   { get; set; }
     public DbSet<GradeDefinition>        GradeDefinitions        { get; set; }
     public DbSet<StoredFile> StoredFiles => Set<StoredFile>();
+
+    public DbSet<RegistrationFormSchema> RegistrationFormSchemas { get; set; }
+    public DbSet<RegistrationSession>    RegistrationSessions    { get; set; }
+    public DbSet<StudentRegistration>    StudentRegistrations    { get; set; }
+
+    public DbSet<Student>               Students                { get; set; }
+    public DbSet<ParentTuteur>          ParentTuteurs           { get; set; }
+    public DbSet<StudentExtendedData>   StudentExtendedData     { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
@@ -79,4 +90,6 @@ public sealed class ApplicationDbContext(
             _currentTransaction = null;
         }
     }
+
+
 }

@@ -1,4 +1,5 @@
 using Application.Abstractions.Authentication;
+using Application.Abstractions.Interfaces;
 using Application.Abstractions.Interfaces.Repositories;
 using Application.Abstractions.Interfaces.Services;
 using Application.Schools.Contracts;
@@ -6,6 +7,7 @@ using Domain.EducationalSystem.Entities;
 using Domain.Schools;
 using Domain.Schools.Entities;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 using SharedKernel.Enums;
 using SharedKernel.ValueObjects;
@@ -22,19 +24,20 @@ public sealed class CreateSchoolCommandHandler
     private readonly IMemberShipReposiory _membershipRepo;
     private readonly IGeoCodingService _geocodingService;
     private readonly IEducationalSystemRepository _educationalSystemRepo;
-
+    private readonly IApplicationDbContext  _dbContext;
     public CreateSchoolCommandHandler(
         ICurrentUserService currentUserService,
         ISchoolRepository schoolRepo,
         IMemberShipReposiory membershipRepo,
         IGeoCodingService geocodingService,
-        IEducationalSystemRepository educationalSystemRepo)
+        IEducationalSystemRepository educationalSystemRepo, IApplicationDbContext dbContext)
     {
         _currentUserService = currentUserService;
         _schoolRepo = schoolRepo;
         _membershipRepo = membershipRepo;
         _geocodingService = geocodingService;
         _educationalSystemRepo = educationalSystemRepo;
+        _dbContext = dbContext;
     }
 
     public async Task<ErrorOr<CreateSchoolResponse>> Handle(
@@ -97,6 +100,21 @@ public sealed class CreateSchoolCommandHandler
         // ── 4. Create School ─────────────────────────────────────────────────
         // GradeLevelOffering starts as Empty — derived automatically as
         // supported grades are added below. Never passed in manually.
+        bool duplicate = await _dbContext.Schools.AsNoTracking()
+            .AnyAsync(s =>
+                    s.OwnerUserId == currentUserId &&
+                    s.Name == request.Name &&
+                    s.Address.City == request.Address.City,
+                cancellationToken);
+
+
+        if (duplicate)
+        {
+            return Error.Conflict(
+                "School.DuplicateNameInCity",
+                "Une école avec ce nom existe déjà dans cette ville pour ce propriétaire.");
+        }
+
         ErrorOr<School> schoolResult = School.Create(
             SchoolId.New(),
             currentUserId,

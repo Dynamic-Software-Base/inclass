@@ -119,13 +119,11 @@ public sealed class ParentTuteurConfiguration
             {
                 coords.Property(c => c.Latitude)
                     .HasColumnName("address_latitude")
-                    .HasPrecision(10, 7)
-                    .IsRequired(false);
+                    .HasPrecision(10, 7);
 
                 coords.Property(c => c.Longitude)
                     .HasColumnName("address_longitude")
-                    .HasPrecision(10, 7)
-                    .IsRequired(false);
+                    .HasPrecision(10, 7);
             });
         });
 
@@ -184,13 +182,11 @@ public sealed class ParentTuteurConfiguration
             .IsRequired();
 
         builder.Property(x => x.LastModifiedAt)
-            .HasColumnName("last_modified_at")
-            .IsRequired(false);
+            .HasColumnName("last_modified_at");
 
         builder.Property(x => x.LastModifiedBy)
             .HasColumnName("last_modified_by")
-            .HasConversion(id => id.Value, value => UserId.From(value))
-            .IsRequired(false);
+            .HasConversion(id => id.Value, value => UserId.From(value));
 
         // ── Indexes ───────────────────────────────────────────────────────────
         builder.HasIndex(x => x.RegistrationId)
