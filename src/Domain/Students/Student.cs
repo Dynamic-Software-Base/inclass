@@ -8,41 +8,16 @@ using SharedKernel.ValueObjects.StronglyTypedIds.Registration;
 
 namespace Domain.Students;
 
-/// <summary>
-/// Élève inscrit dans une école.
-/// Créé uniquement via RegistrationApprovedEvent — jamais directement.
-/// Les champs proviennent de la section "personal" du FormValuesJson.
-/// </summary>
 public sealed class Student : AggregateRoot<Student, StudentId>
 {
-    /// <summary>École dans laquelle l'élève est inscrit</summary>
     public SchoolId SchoolId { get; private set; }
-
-    /// <summary>Dossier d'inscription source</summary>
     public StudentRegistrationId RegistrationId { get; private set; }
-
-    /// <summary>Niveau scolaire actuel</summary>
     public GradeDefinitionId GradeDefinitionId { get; private set; }
-
-    /// <summary>Nom complet — prénom + nom de famille</summary>
     public FullName FullName { get; private set; } = null!;
-
-    /// <summary>Date de naissance</summary>
     public DateOnly DateOfBirth { get; private set; }
-
-    /// <summary>Sexe</summary>
     public Gender Gender { get; private set; }
-
-    /// <summary>
-    /// Identifiant national — code MASSAR ou CIN.
-    /// Nullable : peut ne pas être assigné au moment de l'inscription.
-    /// </summary>
     public NationalId? NationalId { get; private set; }
-
-    /// <summary>Année scolaire d'inscription — ex: "2024-2025"</summary>
     public AcademicYear AcademicYear { get; private set; } = null!;
-
-    /// <summary>L'élève est-il actif dans l'école ?</summary>
     public bool IsActive { get; private set; } = true;
 
     private Student() { }

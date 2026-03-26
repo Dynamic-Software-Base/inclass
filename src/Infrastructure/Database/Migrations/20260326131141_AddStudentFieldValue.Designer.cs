@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260326131141_AddStudentFieldValue")]
+    partial class AddStudentFieldValue
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -451,11 +454,6 @@ namespace Infrastructure.Database.Migrations
                     b.Property<DateTime?>("ExpiryDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expiry_date");
-
-                    b.Property<string>("FormValuesJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb")
-                        .HasColumnName("form_values_json");
 
                     b.Property<DateTimeOffset?>("LastModifiedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1162,11 +1160,61 @@ namespace Infrastructure.Database.Migrations
                             b1.Navigation("PhoneNumber");
                         });
 
+                    b.OwnsMany("Domain.Registrations.ApplicationFieldValue", "FieldValues", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("uuid")
+                                .HasColumnName("id");
+
+                            b1.Property<Guid>("ApplicationId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("application_id");
+
+                            b1.Property<string>("FieldKey")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("field_key");
+
+                            b1.Property<string>("FieldType")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("character varying(50)")
+                                .HasColumnName("field_type");
+
+                            b1.Property<string>("Value")
+                                .HasMaxLength(1000)
+                                .HasColumnType("character varying(1000)")
+                                .HasColumnName("value");
+
+                            b1.Property<Guid>("application_id")
+                                .HasColumnType("uuid");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("application_id");
+
+                            b1.HasIndex("ApplicationId", "FieldKey")
+                                .IsUnique()
+                                .HasDatabaseName("ix_application_field_values_application_field");
+
+                            b1.ToTable("application_field_values", "public", t =>
+                                {
+                                    t.Property("application_id")
+                                        .HasColumnName("application_id1");
+                                });
+
+                            b1.WithOwner()
+                                .HasForeignKey("application_id");
+                        });
+
                     b.Navigation("AcademicYear")
                         .IsRequired();
 
                     b.Navigation("Contact")
                         .IsRequired();
+
+                    b.Navigation("FieldValues");
 
                     b.Navigation("QueueInfo");
                 });

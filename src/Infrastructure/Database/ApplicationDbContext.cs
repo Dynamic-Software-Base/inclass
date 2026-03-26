@@ -29,7 +29,7 @@ public sealed class ApplicationDbContext(
 
     public DbSet<RegistrationFormSchema> RegistrationFormSchemas { get; set; }
     public DbSet<RegistrationSession>    RegistrationSessions    { get; set; }
-    public DbSet<StudentRegistration>    StudentRegistrations    { get; set; }
+    public DbSet<StudentApplication>    StudentApplications    { get; set; }
 
     public DbSet<Student>               Students                { get; set; }
     public DbSet<ParentTuteur>          ParentTuteurs           { get; set; }

@@ -1,5 +1,6 @@
 ﻿using Domain.Registrations.Enums;
 using Domain.Registrations.Events;
+using Domain.Registrations.ValueObjects;
 using Domain.Schools;
 using ErrorOr;
 using SharedKernel;
@@ -28,12 +29,22 @@ public sealed class RegistrationSession
     public RegistrationPeriod Period { get; private set; } = null!;
 
 
-    public RegistrationCapacity? Capacity { get; private set; }
+    public RegistrationCapacity Capacity { get; private set; }
 
 
     public RegistrationSessionStatus Status { get; private set; }
 
     public Guid? BatchId { get; private set; }
+
+
+    public DailyProcessingQuota? ProcessingQuota { get; private set; }
+    public TimeOnly DailyCutoffTime { get; private set; }
+    public AssignmentStrategy AssignmentStrategy { get; private set; }
+    public int ReservedCount { get; private set; }
+    public int EnrolledCount { get; private set; }
+    private readonly List<RegistrationPhase> _phases = [];
+    public IReadOnlyCollection<RegistrationPhase> Phases => _phases.AsReadOnly();
+
     private RegistrationSession() { }
 
     private RegistrationSession(
@@ -43,7 +54,11 @@ public sealed class RegistrationSession
         RegistrationFormSchemaId formSchemaId,
         AcademicYear academicYear,
         RegistrationPeriod period,
-        RegistrationCapacity? capacity,
+        RegistrationCapacity capacity,
+        List<RegistrationPhase> phases,
+        AssignmentStrategy assignmentStrategy,
+        DailyProcessingQuota? processingQuota,
+        TimeOnly? dailyCutoffTime,
         UserId createdBy)
         : base(id, createdBy)
     {
@@ -53,8 +68,13 @@ public sealed class RegistrationSession
         AcademicYear = academicYear;
         Period = period;
         Capacity = capacity;
+        _phases = phases;
+        AssignmentStrategy = assignmentStrategy;
+        ProcessingQuota = processingQuota;
+        DailyCutoffTime = dailyCutoffTime ?? new TimeOnly(12, 0);
+        ReservedCount = 0;
+        EnrolledCount = 0;
 
-        // Determine initial status from period
         Status = period.IsScheduled(DateTime.UtcNow)
             ? RegistrationSessionStatus.Scheduled
             : RegistrationSessionStatus.Open;
@@ -67,21 +87,35 @@ public sealed class RegistrationSession
         RegistrationFormSchemaId formSchemaId,
         AcademicYear academicYear,
         RegistrationPeriod period,
+        List<RegistrationPhase> phases,
+        AssignmentStrategy assignmentStrategy,
         UserId createdBy,
-        RegistrationCapacity? capacity = null,
+        RegistrationCapacity capacity,
+        DailyProcessingQuota? processingQuota = null,
+        TimeOnly? dailyCutoffTime = null,
         Guid? batchId = null)
     {
+        for (int i = 0; i < phases.Count - 1; i++)
+        {
+            if (phases[i].EndDate > phases[i + 1].StartDate)
+            {
+                return Error.Validation(
+                    "RegistrationSession.PhasesOverlap",
+                    "Les phases de la session ne doivent pas se chevaucher.");
+            }
+        }
         var session = new RegistrationSession(
             id, schoolId, gradeDefinitionId, formSchemaId,
-            academicYear, period, capacity, createdBy);
+            academicYear, period, capacity , phases,assignmentStrategy,processingQuota,dailyCutoffTime,createdBy);
+
         session.BatchId = batchId;
-        // Only raise opened event if session starts immediately
         if (session.Status == RegistrationSessionStatus.Open)
         {
             session.RaiseDomainEvent(new RegistrationSessionOpenedEvent(
                 Guid.NewGuid(), DateTime.UtcNow,
                 id, schoolId, gradeDefinitionId, academicYear));
         }
+
 
         return session;
     }
@@ -146,7 +180,7 @@ public sealed class RegistrationSession
         return Result.Success;
     }
 
-    public ErrorOr<Success> UpdateCapacity(RegistrationCapacity? capacity, UserId updatedBy)
+    public ErrorOr<Success> UpdateCapacity(RegistrationCapacity capacity, UserId updatedBy)
     {
         if (Status == RegistrationSessionStatus.Closed)
         {
@@ -176,5 +210,60 @@ public sealed class RegistrationSession
     public bool IsAcceptingRegistrations(DateTime now, int currentCount) =>
         Status == RegistrationSessionStatus.Open
         && Period.IsOpen(now)
-        && (Capacity is null || !Capacity.IsFull(currentCount));
+        && (!Capacity.IsFull(currentCount));
+
+
+
+    public ErrorOr<Success> ReserveSpot()
+    {
+        if (Capacity.IsFull(ReservedCount + EnrolledCount))
+        {
+            return Error.Failure("RegistrationSession.ReserveSpot", "The current registration session is full");
+        }
+
+        ReservedCount++;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> ReleaseSpot()
+    {
+        if (ReservedCount <= 0)
+        {
+            return Error.Failure("RegistrationSession.ReleaseSpot", "no reservation to release");
+        }
+        ReservedCount--;
+        return Result.Success;
+    }
+
+    public ErrorOr<Success> EnrollStudent()
+    {
+        if (ReservedCount <= 0)
+        {
+            return Error.Failure("RegistrationSession.EnrollStudent",
+                "Aucune réservation active à convertir en inscription.");
+        }
+
+        ReservedCount--;
+        EnrolledCount++;
+        return Result.Success;
+    }
+    public bool IsAcceptingRegistrations(DateTime now) =>
+        Status == RegistrationSessionStatus.Open
+        && Period.IsOpen(now)
+        && !Capacity.IsFull(ReservedCount + EnrolledCount);
+    public int GetAvailableSlots() => Capacity.MaxSlots - ReservedCount - EnrolledCount;
+    public bool IsWhitelistRequired() => GetAvailableSlots() == 0 && ReservedCount > 0;
+    public bool IsHardFull() => GetAvailableSlots() == 0 && ReservedCount == 0;
+    public ErrorOr<DateOnly> CalculateProcessingDate(int queuePosition, DateTime submittedAt)
+    {
+        if (ProcessingQuota != null)
+        {
+            return ProcessingQuota.CalculateProcessingDate(DateOnly.FromDateTime(Period.OpenDate), queuePosition,
+                submittedAt, DailyCutoffTime);
+        }
+
+        return Error.Failure("RegistrationSession.CalculateProcessingDate", "No dailyQuta has been set ");
+    }
+    public RegistrationPhase? GetActivePhase(DateTime now) =>
+        _phases.FirstOrDefault(p => p.IsActive(now));
 }
