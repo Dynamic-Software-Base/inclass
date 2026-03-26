@@ -2,7 +2,6 @@
 
 public sealed record RegistrationCapacity
 {
-    /// <summary>Nombre maximum de dossiers acceptés</summary>
     public int MaxSlots { get; }
 
     private RegistrationCapacity(int maxSlots) => MaxSlots = maxSlots;
@@ -19,10 +18,9 @@ public sealed record RegistrationCapacity
         return new RegistrationCapacity(maxSlots);
     }
 
-    /// <summary>La capacité est-elle atteinte ?</summary>
     public bool IsFull(int currentCount) => currentCount >= MaxSlots;
 
-    /// <summary>Places restantes</summary>
+
     public int Remaining(int currentCount) => Math.Max(0, MaxSlots - currentCount);
 
     public override string ToString() => $"{MaxSlots} places";

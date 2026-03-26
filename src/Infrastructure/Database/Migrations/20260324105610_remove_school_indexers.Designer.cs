@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260324105610_remove_school_indexers")]
+    partial class remove_school_indexers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -354,12 +357,6 @@ namespace Infrastructure.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<string>("AssignmentStrategy")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("assignment_strategy");
-
                     b.Property<Guid?>("BatchId")
                         .HasColumnType("uuid")
                         .HasColumnName("batch_id");
@@ -371,14 +368,6 @@ namespace Infrastructure.Database.Migrations
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid")
                         .HasColumnName("created_by");
-
-                    b.Property<TimeOnly>("DailyCutoffTime")
-                        .HasColumnType("time without time zone")
-                        .HasColumnName("daily_cutoff_time");
-
-                    b.Property<int>("EnrolledCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("enrolled_count");
 
                     b.Property<Guid>("FormSchemaId")
                         .HasColumnType("uuid")
@@ -395,10 +384,6 @@ namespace Infrastructure.Database.Migrations
                     b.Property<Guid>("LastModifiedBy")
                         .HasColumnType("uuid")
                         .HasColumnName("last_modified_by");
-
-                    b.Property<int>("ReservedCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("reserved_count");
 
                     b.Property<Guid>("SchoolId")
                         .HasColumnType("uuid")
@@ -424,21 +409,11 @@ namespace Infrastructure.Database.Migrations
                     b.ToTable("registration_sessions", "public");
                 });
 
-            modelBuilder.Entity("Domain.Registrations.StudentApplication", b =>
+            modelBuilder.Entity("Domain.Registrations.StudentRegistration", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
                         .HasColumnName("id");
-
-                    b.Property<string>("ApplicationType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("application_type");
-
-                    b.Property<Guid?>("AssignedClassId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("assigned_class_id");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -448,14 +423,20 @@ namespace Infrastructure.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by");
 
-                    b.Property<DateTime?>("ExpiryDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expiry_date");
+                    b.Property<Guid>("FormSchemaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("form_schema_id");
 
                     b.Property<string>("FormValuesJson")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("jsonb")
+                        .HasDefaultValue("{}")
                         .HasColumnName("form_values_json");
+
+                    b.Property<Guid>("GradeDefinitionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("grade_definition_id");
 
                     b.Property<DateTimeOffset?>("LastModifiedAt")
                         .HasColumnType("timestamp with time zone")
@@ -464,19 +445,6 @@ namespace Infrastructure.Database.Migrations
                     b.Property<Guid>("LastModifiedBy")
                         .HasColumnType("uuid")
                         .HasColumnName("last_modified_by");
-
-                    b.Property<Guid>("ParentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("parent_id");
-
-                    b.Property<string>("PaymentStatus")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("payment_status");
-
-                    b.Property<bool>("RescheduleUsed")
-                        .HasColumnType("boolean")
-                        .HasColumnName("reschedule_used");
 
                     b.Property<Guid>("SchoolId")
                         .HasColumnType("uuid")
@@ -488,38 +456,28 @@ namespace Infrastructure.Database.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Draft")
                         .HasColumnName("status");
 
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("student_id");
-
-                    b.Property<DateTime>("SubmittedAt")
+                    b.Property<DateTime?>("SubmittedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("submitted_at");
 
-                    b.Property<Guid>("TargetGradeId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("target_grade_id");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("ParentId")
-                        .HasDatabaseName("ix_student_applications_parent_id");
+                    b.HasIndex("FormSchemaId")
+                        .HasDatabaseName("ix_student_registrations_form_schema_id");
+
+                    b.HasIndex("SessionId")
+                        .HasDatabaseName("ix_student_registrations_session_id");
 
                     b.HasIndex("SchoolId", "Status")
-                        .HasDatabaseName("ix_student_applications_school_status");
+                        .HasDatabaseName("ix_student_registrations_school_status");
 
-                    b.HasIndex("SessionId", "Status")
-                        .HasDatabaseName("ix_student_applications_session_status");
-
-                    b.HasIndex("StudentId", "SessionId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_student_applications_student_session");
-
-                    b.ToTable("student_applications", "public");
+                    b.ToTable("student_registrations", "public");
                 });
 
             modelBuilder.Entity("Domain.Schools.School", b =>
@@ -590,57 +548,6 @@ namespace Infrastructure.Database.Migrations
                         .HasDatabaseName("ix_schools_owner_user_id");
 
                     b.ToTable("schools", "public");
-                });
-
-            modelBuilder.Entity("Domain.Schools.SchoolClass", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<int>("CurrentEnrollmentCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("current_enrollment_count");
-
-                    b.Property<string>("Gender")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("gender");
-
-                    b.Property<Guid>("GradeDefinitionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("grade_definition_id");
-
-                    b.Property<DateTimeOffset?>("LastModifiedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_modified_at");
-
-                    b.Property<Guid>("LastModifiedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("last_modified_by");
-
-                    b.Property<Guid>("SchoolId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("school_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SchoolId")
-                        .HasDatabaseName("ix_school_classes_school_id");
-
-                    b.HasIndex("SchoolId", "GradeDefinitionId")
-                        .HasDatabaseName("ix_school_classes_school_grade");
-
-                    b.ToTable("school_classes", "public");
                 });
 
             modelBuilder.Entity("Domain.Schools.UserSchoolMembership", b =>
@@ -810,18 +717,29 @@ namespace Infrastructure.Database.Migrations
                         .HasColumnType("character varying(1000)")
                         .HasColumnName("field_value");
 
+                    b.Property<Guid>("GradeDefinitionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("grade_definition_id");
+
+                    b.Property<Guid>("SchoolId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("school_id");
+
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uuid")
                         .HasColumnName("student_id");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FieldKey", "FieldValue")
-                        .HasDatabaseName("ix_student_extended_data_field_value");
+                    b.HasIndex("StudentId")
+                        .HasDatabaseName("ix_student_extended_data_student_id");
 
                     b.HasIndex("StudentId", "FieldKey")
                         .IsUnique()
-                        .HasDatabaseName("ix_student_extended_data_student_field");
+                        .HasDatabaseName("ix_student_extended_data_student_field_key_unique");
+
+                    b.HasIndex("SchoolId", "GradeDefinitionId", "FieldKey")
+                        .HasDatabaseName("ix_student_extended_data_school_grade_field_key");
 
                     b.ToTable("student_extended_data", "public");
                 });
@@ -948,23 +866,6 @@ namespace Infrastructure.Database.Migrations
                                 .HasForeignKey("RegistrationSessionId");
                         });
 
-                    b.OwnsOne("Domain.Registrations.ValueObjects.DailyProcessingQuota", "ProcessingQuota", b1 =>
-                        {
-                            b1.Property<Guid>("RegistrationSessionId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<int>("Value")
-                                .HasColumnType("integer")
-                                .HasColumnName("daily_processing_quota");
-
-                            b1.HasKey("RegistrationSessionId");
-
-                            b1.ToTable("registration_sessions", "public");
-
-                            b1.WithOwner()
-                                .HasForeignKey("RegistrationSessionId");
-                        });
-
                     b.OwnsOne("SharedKernel.ValueObjects.Registration.RegistrationCapacity", "Capacity", b1 =>
                         {
                             b1.Property<Guid>("RegistrationSessionId")
@@ -1003,145 +904,50 @@ namespace Infrastructure.Database.Migrations
                                 .HasForeignKey("RegistrationSessionId");
                         });
 
-                    b.OwnsMany("Domain.Registrations.ValueObjects.RegistrationPhase", "Phases", b1 =>
-                        {
-                            b1.Property<int>("id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("integer")
-                                .HasColumnName("id");
-
-                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("id"));
-
-                            b1.Property<string>("AllowedApplicantType")
-                                .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("character varying(50)")
-                                .HasColumnName("allowed_applicant_type");
-
-                            b1.Property<DateTime>("EndDate")
-                                .HasColumnType("timestamp with time zone")
-                                .HasColumnName("end_date");
-
-                            b1.Property<string>("PhaseType")
-                                .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("character varying(50)")
-                                .HasColumnName("phase_type");
-
-                            b1.Property<DateTime>("StartDate")
-                                .HasColumnType("timestamp with time zone")
-                                .HasColumnName("start_date");
-
-                            b1.Property<Guid>("session_id")
-                                .HasColumnType("uuid");
-
-                            b1.HasKey("id");
-
-                            b1.HasIndex("session_id");
-
-                            b1.ToTable("registration_session_phases", "public");
-
-                            b1.WithOwner()
-                                .HasForeignKey("session_id");
-                        });
-
                     b.Navigation("AcademicYear")
                         .IsRequired();
 
-                    b.Navigation("Capacity")
-                        .IsRequired();
+                    b.Navigation("Capacity");
 
                     b.Navigation("Period")
                         .IsRequired();
-
-                    b.Navigation("Phases");
-
-                    b.Navigation("ProcessingQuota");
                 });
 
-            modelBuilder.Entity("Domain.Registrations.StudentApplication", b =>
+            modelBuilder.Entity("Domain.Registrations.StudentRegistration", b =>
                 {
-                    b.OwnsOne("SharedKernel.ValueObjects.AcademicYear", "AcademicYear", b1 =>
+                    b.OwnsOne("SharedKernel.ValueObjects.Registration.ApplicantContact", "ApplicantContact", b1 =>
                         {
-                            b1.Property<Guid>("StudentApplicationId")
+                            b1.Property<Guid>("StudentRegistrationId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<int>("EndYear")
-                                .HasColumnType("integer")
-                                .HasColumnName("academic_year_end_year");
+                            b1.HasKey("StudentRegistrationId");
 
-                            b1.Property<int>("StartYear")
-                                .HasColumnType("integer")
-                                .HasColumnName("academic_year_start_year");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(10)
-                                .HasColumnType("character varying(10)")
-                                .HasColumnName("academic_year_value");
-
-                            b1.HasKey("StudentApplicationId");
-
-                            b1.ToTable("student_applications", "public");
+                            b1.ToTable("student_registrations", "public");
 
                             b1.WithOwner()
-                                .HasForeignKey("StudentApplicationId");
-                        });
-
-                    b.OwnsOne("Domain.Registrations.ValueObjects.QueueInfo", "QueueInfo", b1 =>
-                        {
-                            b1.Property<Guid>("StudentApplicationId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<int>("Position")
-                                .HasColumnType("integer")
-                                .HasColumnName("queue_position");
-
-                            b1.Property<DateOnly>("ProcessingDate")
-                                .HasColumnType("date")
-                                .HasColumnName("queue_processing_date");
-
-                            b1.HasKey("StudentApplicationId");
-
-                            b1.ToTable("student_applications", "public");
-
-                            b1.WithOwner()
-                                .HasForeignKey("StudentApplicationId");
-                        });
-
-                    b.OwnsOne("SharedKernel.ValueObjects.Registration.ApplicantContact", "Contact", b1 =>
-                        {
-                            b1.Property<Guid>("StudentApplicationId")
-                                .HasColumnType("uuid");
-
-                            b1.HasKey("StudentApplicationId");
-
-                            b1.ToTable("student_applications", "public");
-
-                            b1.WithOwner()
-                                .HasForeignKey("StudentApplicationId");
+                                .HasForeignKey("StudentRegistrationId");
 
                             b1.OwnsOne("SharedKernel.ValueObjects.Email", "Email", b2 =>
                                 {
-                                    b2.Property<Guid>("ApplicantContactStudentApplicationId")
+                                    b2.Property<Guid>("ApplicantContactStudentRegistrationId")
                                         .HasColumnType("uuid");
 
                                     b2.Property<string>("EmailAddress")
-                                        .HasMaxLength(255)
-                                        .HasColumnType("character varying(255)")
+                                        .HasMaxLength(256)
+                                        .HasColumnType("character varying(256)")
                                         .HasColumnName("contact_email");
 
-                                    b2.HasKey("ApplicantContactStudentApplicationId");
+                                    b2.HasKey("ApplicantContactStudentRegistrationId");
 
-                                    b2.ToTable("student_applications", "public");
+                                    b2.ToTable("student_registrations", "public");
 
                                     b2.WithOwner()
-                                        .HasForeignKey("ApplicantContactStudentApplicationId");
+                                        .HasForeignKey("ApplicantContactStudentRegistrationId");
                                 });
 
                             b1.OwnsOne("SharedKernel.ValueObjects.PhoneNumber", "PhoneNumber", b2 =>
                                 {
-                                    b2.Property<Guid>("ApplicantContactStudentApplicationId")
+                                    b2.Property<Guid>("ApplicantContactStudentRegistrationId")
                                         .HasColumnType("uuid");
 
                                     b2.Property<string>("Number")
@@ -1149,12 +955,12 @@ namespace Infrastructure.Database.Migrations
                                         .HasColumnType("character varying(20)")
                                         .HasColumnName("contact_phone");
 
-                                    b2.HasKey("ApplicantContactStudentApplicationId");
+                                    b2.HasKey("ApplicantContactStudentRegistrationId");
 
-                                    b2.ToTable("student_applications", "public");
+                                    b2.ToTable("student_registrations", "public");
 
                                     b2.WithOwner()
-                                        .HasForeignKey("ApplicantContactStudentApplicationId");
+                                        .HasForeignKey("ApplicantContactStudentRegistrationId");
                                 });
 
                             b1.Navigation("Email");
@@ -1162,13 +968,36 @@ namespace Infrastructure.Database.Migrations
                             b1.Navigation("PhoneNumber");
                         });
 
-                    b.Navigation("AcademicYear")
+                    b.OwnsOne("SharedKernel.ValueObjects.Registration.ReviewNote", "ReviewNote", b1 =>
+                        {
+                            b1.Property<Guid>("StudentRegistrationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Comment")
+                                .HasMaxLength(1000)
+                                .HasColumnType("character varying(1000)")
+                                .HasColumnName("review_comment");
+
+                            b1.Property<DateTime>("ReviewedAt")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("review_reviewed_at");
+
+                            b1.Property<Guid>("ReviewedBy")
+                                .HasColumnType("uuid")
+                                .HasColumnName("review_reviewed_by");
+
+                            b1.HasKey("StudentRegistrationId");
+
+                            b1.ToTable("student_registrations", "public");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StudentRegistrationId");
+                        });
+
+                    b.Navigation("ApplicantContact")
                         .IsRequired();
 
-                    b.Navigation("Contact")
-                        .IsRequired();
-
-                    b.Navigation("QueueInfo");
+                    b.Navigation("ReviewNote");
                 });
 
             modelBuilder.Entity("Domain.Schools.School", b =>
@@ -1194,12 +1023,10 @@ namespace Infrastructure.Database.Migrations
                                 .HasColumnName("cached_broad_level");
 
                             b1.Property<int?>("Capacity")
-                                .HasColumnType("integer")
-                                .HasColumnName("capacity");
+                                .HasColumnType("integer");
 
                             b1.Property<bool>("IsOffered")
-                                .HasColumnType("boolean")
-                                .HasColumnName("is_offered");
+                                .HasColumnType("boolean");
 
                             b1.HasKey("SchoolId", "GradeDefinitionId");
 
@@ -1359,81 +1186,6 @@ namespace Infrastructure.Database.Migrations
                     b.Navigation("Pictures");
 
                     b.Navigation("SupportedGrades");
-                });
-
-            modelBuilder.Entity("Domain.Schools.SchoolClass", b =>
-                {
-                    b.OwnsOne("SharedKernel.ValueObjects.AcademicYear", "AcademicYear", b1 =>
-                        {
-                            b1.Property<Guid>("SchoolClassId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<int>("EndYear")
-                                .HasColumnType("integer")
-                                .HasColumnName("academic_year_end_year");
-
-                            b1.Property<int>("StartYear")
-                                .HasColumnType("integer")
-                                .HasColumnName("academic_year_start_year");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(10)
-                                .HasColumnType("character varying(10)")
-                                .HasColumnName("academic_year_value");
-
-                            b1.HasKey("SchoolClassId");
-
-                            b1.ToTable("school_classes", "public");
-
-                            b1.WithOwner()
-                                .HasForeignKey("SchoolClassId");
-                        });
-
-                    b.OwnsOne("Domain.Schools.ValueObjects.ClassCapacity", "Capacity", b1 =>
-                        {
-                            b1.Property<Guid>("SchoolClassId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<int>("MaxStudents")
-                                .HasColumnType("integer")
-                                .HasColumnName("capacity_max_students");
-
-                            b1.HasKey("SchoolClassId");
-
-                            b1.ToTable("school_classes", "public");
-
-                            b1.WithOwner()
-                                .HasForeignKey("SchoolClassId");
-                        });
-
-                    b.OwnsOne("Domain.Schools.ValueObjects.ClassName", "Name", b1 =>
-                        {
-                            b1.Property<Guid>("SchoolClassId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(20)
-                                .HasColumnType("character varying(20)")
-                                .HasColumnName("name");
-
-                            b1.HasKey("SchoolClassId");
-
-                            b1.ToTable("school_classes", "public");
-
-                            b1.WithOwner()
-                                .HasForeignKey("SchoolClassId");
-                        });
-
-                    b.Navigation("AcademicYear")
-                        .IsRequired();
-
-                    b.Navigation("Capacity")
-                        .IsRequired();
-
-                    b.Navigation("Name")
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Domain.Students.ParentTuteur", b =>

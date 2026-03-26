@@ -15,7 +15,7 @@ public record AcademicYear
 
     public static ErrorOr<AcademicYear> Create(string value)
     {
-        if (!string.IsNullOrWhiteSpace(value))
+        if (string.IsNullOrWhiteSpace(value))
         {
             return DomainErrors.Required(nameof(value));
         }

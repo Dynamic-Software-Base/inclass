@@ -71,14 +71,75 @@ public sealed class RegistrationSessionConfiguration
         });
 
         // ── RegistrationCapacity (optional owned value object) ─────────────────
-        // 1 column: capacity_max_slots (nullable — null means unlimited)
         builder.OwnsOne(x => x.Capacity, c =>
         {
             c.Property(x => x.MaxSlots)
                 .HasColumnName("capacity_max_slots")
                 .IsRequired();
         });
+// ── AssignmentStrategy ────────────────────────────────────────────────
+        builder.Property(x => x.AssignmentStrategy)
+            .HasColumnName("assignment_strategy")
+            .HasConversion<string>()
+            .HasMaxLength(50)
+            .IsRequired();
 
+// ── DailyCutoffTime ───────────────────────────────────────────────────
+        builder.Property(x => x.DailyCutoffTime)
+            .HasColumnName("daily_cutoff_time")
+            .IsRequired();
+
+// ── DailyProcessingQuota (optional owned value object) ────────────────
+        builder.OwnsOne(x => x.ProcessingQuota, q =>
+        {
+            q.Property(x => x.Value)
+                .HasColumnName("daily_processing_quota")
+                .IsRequired();
+        });
+
+// ── Seat counters ─────────────────────────────────────────────────────
+        builder.Property(x => x.ReservedCount)
+            .HasColumnName("reserved_count")
+            .IsRequired();
+
+        builder.Property(x => x.EnrolledCount)
+            .HasColumnName("enrolled_count")
+            .IsRequired();
+
+// ── Phases (owned collection) ─────────────────────────────────────────
+        builder.OwnsMany(x => x.Phases, phase =>
+        {
+            phase.ToTable("registration_session_phases");
+
+            phase.WithOwner()
+                .HasForeignKey("session_id");
+
+            phase.Property<int>("id")
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            phase.HasKey("id");
+
+            phase.Property(x => x.PhaseType)
+                .HasColumnName("phase_type")
+                .HasConversion<string>()
+                .HasMaxLength(50)
+                .IsRequired();
+
+            phase.Property(x => x.AllowedApplicantType)
+                .HasColumnName("allowed_applicant_type")
+                .HasConversion<string>()
+                .HasMaxLength(50)
+                .IsRequired();
+
+            phase.Property(x => x.StartDate)
+                .HasColumnName("start_date")
+                .IsRequired();
+
+            phase.Property(x => x.EndDate)
+                .HasColumnName("end_date")
+                .IsRequired();
+        });
         // ── Status ────────────────────────────────────────────────────────────
         builder.Property(x => x.Status)
             .HasColumnName("status")
