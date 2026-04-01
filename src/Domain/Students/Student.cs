@@ -16,6 +16,7 @@ public sealed class Student : AggregateRoot<Student, StudentId>
     public FullName FullName { get; private set; } = null!;
     public DateOnly DateOfBirth { get; private set; }
     public Gender Gender { get; private set; }
+    public string IdentityKey { get; private set; } = string.Empty;
     public NationalId? NationalId { get; private set; }
     public AcademicYear AcademicYear { get; private set; } = null!;
     public bool IsActive { get; private set; } = true;
@@ -66,7 +67,16 @@ public sealed class Student : AggregateRoot<Student, StudentId>
     }
 
     // --- Mutation ---
+// Set it when student is created from enrollment event
+    public void SetIdentityKey(string identityKey)
+    {
+        if (!string.IsNullOrWhiteSpace(IdentityKey))
+        {
+            return;
+        }
 
+        IdentityKey = identityKey;
+    }
     public ErrorOr<Success> AssignNationalId(NationalId nationalId, UserId updatedBy)
     {
         if (NationalId is not null)

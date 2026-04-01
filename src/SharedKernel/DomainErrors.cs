@@ -49,7 +49,41 @@ public static class DomainErrors
             "School.GradeNotFound",
             "The specified grade is not in this school's supported grades.");
     }
+    public static class RegistrationSessionErrors
+    {
+        public static readonly Error NotFound =
+            Error.NotFound("RegistrationSession.NotFound", "Session introuvable.");
 
+        public static readonly Error NotAcceptingApplications =
+            Error.Conflict("RegistrationSession.NotAcceptingApplications",
+                "La session n'accepte pas de candidatures en ce moment.");
+
+        public static readonly Error NoActivePhase =
+            Error.Conflict("RegistrationSession.NoActivePhase",
+                "Aucune phase active pour cette session.");
+
+        public static readonly Error ApplicantTypeNotAllowedInPhase =
+            Error.Conflict("RegistrationSession.ApplicantTypeNotAllowed",
+                "Ce type de candidat n'est pas autorisé dans la phase actuelle.");
+    }
+    public static class StudentApplicationErrors
+    {
+        public static readonly Error ReturningApplicantNotEligible =
+            Error.Conflict("StudentApplication.ReturningNotEligible",
+                "Le dossier de ré-inscription ne peut pas être vérifié.");
+
+        public static readonly Error DuplicateApplication =
+            Error.Conflict("StudentApplication.Duplicate",
+                "Une candidature existe déjà pour cet élève dans cette session.");
+
+        public static readonly Error AlreadyAppliedThisAcademicYear =
+            Error.Conflict("StudentApplication.DuplicateAcademicYear",
+                "L'élève a déjà soumis une candidature pour cette école cette année.");
+
+        public static readonly Error SessionHardFull =
+            Error.Conflict("StudentApplication.SessionHardFull",
+                "La session est complète. Aucune inscription n'est possible.");
+    }
     public static class DateRangeErrors
     {
         public static Error EndsMussBeAfterStart => Error.Validation(

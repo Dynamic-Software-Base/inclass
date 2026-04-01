@@ -5,11 +5,14 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Interfaces;
 using Application.Abstractions.Interfaces.Repositories;
 using Application.Abstractions.Interfaces.Services;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Infrastructure.Authentication;
 using Infrastructure.Authentication.Services;
 using Infrastructure.Authorization;
 using Infrastructure.Database;
 using Infrastructure.Geocoding;
+using Infrastructure.Outbox;
 using Infrastructure.Repositories;
 using Infrastructure.Storage;
 using Infrastructure.Time;
@@ -36,6 +39,7 @@ public static class DependencyInjection
             .AddInfrastructureConfiguration(configuration)
             .AddServices()
             .AddDatabase(configuration)
+            .AddHangfire(configuration)
             .AddHealthChecks(configuration)
             .AddAuthenticationInternal(configuration)
             .AddAuthorizationInternal()
@@ -48,9 +52,14 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IMemberShipReposiory, MemberShipRepository>();
         services.AddScoped<ISchoolRepository, SchoolRepository>();
+        services.AddScoped<ISchoolClassRepository, SchoolClassRepository>();
+        services.AddScoped<IRegistrationSessionRepository, RegistrationSessionRepository>();
+        services.AddScoped<IStudentApplicationRepository, StudentApplicationRepository>();
         services.AddHttpClient<IGeoCodingService, GoogleGeocodingService>();
         services.AddScoped<IEducationalSystemRepository, EducationalSystemRepository>();
         services.AddScoped<IRegistrationFormSchemaRepository, RegistrationFormSchemaRepository>();
+
+        services.AddSingleton<ConvertDomainEventsToOutboxMessagesInterceptor>();
         return services;
     }
 
@@ -58,17 +67,36 @@ public static class DependencyInjection
     {
         string? connectionString = configuration.GetConnectionString("Default");
 
-        services.AddDbContext<ApplicationDbContext>(
-            options => options
-                .UseNpgsql(connectionString, npgsqlOptions =>
-                    npgsqlOptions.MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Default))
-                .UseSnakeCaseNamingConvention());
+        services.AddDbContext<ApplicationDbContext>((sp , options) => options
+            .UseNpgsql(connectionString, npgsqlOptions =>
+                npgsqlOptions.MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Default))
+            .UseSnakeCaseNamingConvention()
+            .AddInterceptors(sp.GetRequiredService<ConvertDomainEventsToOutboxMessagesInterceptor>())
+        );
 
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
         return services;
     }
 
+    private static IServiceCollection AddHangfire (this IServiceCollection services, IConfiguration configuration)
+    {
+        string? connectionString = configuration.GetConnectionString("Default");
+        services.AddHangfire(config => config
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UsePostgreSqlStorage(options =>
+                    options.UseNpgsqlConnection(connectionString),
+                new PostgreSqlStorageOptions
+                {
+                    SchemaName = "hangfire"
+                })
+        );
+        services.AddHangfireServer();
+        services.AddScoped<ProcessOutboxMessagesJob>();
+        return services;
+    }
     private static IServiceCollection AddHealthChecks(this IServiceCollection services, IConfiguration configuration)
     {
         services

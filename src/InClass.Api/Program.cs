@@ -1,9 +1,11 @@
 using System.Reflection;
 using Application;
 using Application.Abstractions.Authentication;
+using Hangfire;
 using HealthChecks.UI.Client;
 using Infrastructure;
 using Infrastructure.Database;
+using Infrastructure.Outbox;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 using Web.Api;
@@ -35,7 +37,18 @@ builder.Services.AddCors(options =>
 
 WebApplication app = builder.Build();
 
+app.UseHangfireDashboard("/hangfire");
 
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    IRecurringJobManager recurringJobManager = scope.ServiceProvider
+        .GetRequiredService<IRecurringJobManager>();
+
+    recurringJobManager.AddOrUpdate<ProcessOutboxMessagesJob>(
+        "process-outbox-messages",
+        job => job.ProcessAsync(CancellationToken.None),
+        "*/30 * * * * *"); // every 30 seconds
+}
 if (app.Environment.IsDevelopment())
 {
     app.UseSwaggerWithUi();

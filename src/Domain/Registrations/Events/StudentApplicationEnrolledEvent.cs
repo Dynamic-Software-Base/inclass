@@ -7,5 +7,5 @@ public sealed record StudentApplicationEnrolledEvent(
     DateTime OccurredOn,
     Guid ApplicationId,
     Guid SessionId,
-    Guid SchoolId,
+    Guid? SchoolId,
     Guid StudentId) : IDomainEvent;

@@ -44,7 +44,7 @@ public sealed class RegistrationSession
     public int EnrolledCount { get; private set; }
     private readonly List<RegistrationPhase> _phases = [];
     public IReadOnlyCollection<RegistrationPhase> Phases => _phases.AsReadOnly();
-
+    public int WaitlistCount { get; private set; }
     private RegistrationSession() { }
 
     private RegistrationSession(
@@ -74,6 +74,7 @@ public sealed class RegistrationSession
         DailyCutoffTime = dailyCutoffTime ?? new TimeOnly(12, 0);
         ReservedCount = 0;
         EnrolledCount = 0;
+        WaitlistCount = 0;
 
         Status = period.IsScheduled(DateTime.UtcNow)
             ? RegistrationSessionStatus.Scheduled
@@ -104,11 +105,14 @@ public sealed class RegistrationSession
                     "Les phases de la session ne doivent pas se chevaucher.");
             }
         }
+
         var session = new RegistrationSession(
             id, schoolId, gradeDefinitionId, formSchemaId,
-            academicYear, period, capacity , phases,assignmentStrategy,processingQuota,dailyCutoffTime,createdBy);
+            academicYear, period, capacity, phases, assignmentStrategy,
+            processingQuota, dailyCutoffTime, createdBy);
 
         session.BatchId = batchId;
+
         if (session.Status == RegistrationSessionStatus.Open)
         {
             session.RaiseDomainEvent(new RegistrationSessionOpenedEvent(
@@ -116,10 +120,39 @@ public sealed class RegistrationSession
                 id, schoolId, gradeDefinitionId, academicYear));
         }
 
-
         return session;
     }
+    public ErrorOr<Success> UpdateQuota(
+        DailyProcessingQuota quota,
+        TimeOnly? dailyCutoffTime,
+        UserId updatedBy)
+    {
+        if (Status == RegistrationSessionStatus.Closed)
+        {
+            return Error.Conflict("Session.Closed", "Impossible de modifier une session fermée.");
+        }
 
+        ProcessingQuota = quota;
+        if (dailyCutoffTime.HasValue)
+        {
+            DailyCutoffTime = dailyCutoffTime.Value;
+        }
+
+        SetUpdated(DateTimeOffset.UtcNow, updatedBy);
+        return Result.Success;
+    }
+    public void AddToWaitlist()
+    {
+        WaitlistCount++;
+    }
+
+    public void ReleaseFromWaitlist()
+    {
+        if (WaitlistCount > 0)
+        {
+            WaitlistCount--;
+        }
+    }
     // --- Lifecycle ---
 
     /// <summary>
@@ -252,7 +285,6 @@ public sealed class RegistrationSession
         && Period.IsOpen(now)
         && !Capacity.IsFull(ReservedCount + EnrolledCount);
     public int GetAvailableSlots() => Capacity.MaxSlots - ReservedCount - EnrolledCount;
-    public bool IsWhitelistRequired() => GetAvailableSlots() == 0 && ReservedCount > 0;
     public bool IsHardFull() => GetAvailableSlots() == 0 && ReservedCount == 0;
     public ErrorOr<DateOnly> CalculateProcessingDate(int queuePosition, DateTime submittedAt)
     {

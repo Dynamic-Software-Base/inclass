@@ -8,6 +8,7 @@ using Domain.Registrations;
 using Domain.Schools;
 using Domain.Students;
 using Domain.Users;
+using Infrastructure.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -20,6 +21,7 @@ public sealed class ApplicationDbContext(
 
     public DbSet<User> Users => Set<User>();
     public DbSet<School> Schools => Set<School>();
+
     public DbSet<UserSchoolMembership> UserSchoolMemberships => Set<UserSchoolMembership>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
     public DbSet<EducationalSystem>      EducationalSystems      { get; set; }
@@ -34,6 +36,12 @@ public sealed class ApplicationDbContext(
     public DbSet<Student>               Students                { get; set; }
     public DbSet<ParentTuteur>          ParentTuteurs           { get; set; }
     public DbSet<StudentExtendedData>   StudentExtendedData     { get; set; }
+
+
+    public DbSet<SchoolClass> SchoolClasses { get; }
+
+
+    public DbSet<OutboxMessage> OutboxMessages { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);

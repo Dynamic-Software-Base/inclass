@@ -43,9 +43,10 @@ public sealed class StudentApplicationConfiguration
 
         builder.Property(x => x.StudentId)
             .HasColumnName("student_id")
-            .HasConversion(id => id.Value, value => StudentId.From(value))
-            .IsRequired();
-
+            .HasConversion(
+                id => id.HasValue ? id.Value.Value : (Guid?)null,
+                value => value.HasValue ? StudentId.From(value.Value) : (StudentId?)null)
+            .IsRequired(false);
         builder.Property(x => x.ParentId)
             .HasColumnName("parent_id")
             .HasConversion(id => id.Value, value => ParentTuteurId.From(value))

@@ -28,12 +28,13 @@ public sealed class StudentApplication : AggregateRoot<StudentApplication,Studen
     public bool RescheduleUsed { get; private set; }
     public SchoolClassId? AssignedClassId { get; private set; }
     public PaymentStatus? PaymentStatus { get; private set; }
-    public StudentId StudentId { get; private set; }
+    public StudentId? StudentId { get; private set; }
     public ParentTuteurId ParentId { get; private set; }
-
+    public string StudentFirstName { get; private set; } = string.Empty;
+    public string StudentLastName { get; private set; } = string.Empty;
 
     public ApplicantContact Contact { get; private set; } = null!;
-
+    public string IdentityKey { get; private set; } = string.Empty;
     public string FormValuesJson { get; private set; } = "{}";
     private StudentApplication() { }
 
@@ -44,13 +45,18 @@ public sealed class StudentApplication : AggregateRoot<StudentApplication,Studen
         GradeDefinitionId targetGradeId,
         AcademicYear academicYear,
         ApplicantType applicationType,
-        StudentId studentId,
+        StudentId? studentId,
         ParentTuteurId parentId,
         ApplicantContact contact,
         string formValuesJson,
+        string identityKey,
+        string studentFirstName,
+        string studentLastName,
         UserId createdBy)
         : base(id, createdBy)
     {
+        StudentFirstName = studentFirstName;
+        StudentLastName = studentLastName;
         SessionId = sessionId;
         SchoolId = schoolId;
         TargetGradeId = targetGradeId;
@@ -60,6 +66,7 @@ public sealed class StudentApplication : AggregateRoot<StudentApplication,Studen
         ParentId = parentId;
         Contact = contact;
         FormValuesJson = formValuesJson;
+        IdentityKey = identityKey;
         Status = StudentApplicationStatus.Submitted;
         SubmittedAt = DateTime.UtcNow;
         RescheduleUsed = false;
@@ -71,22 +78,39 @@ public sealed class StudentApplication : AggregateRoot<StudentApplication,Studen
         GradeDefinitionId targetGradeId,
         AcademicYear academicYear,
         ApplicantType applicationType,
-        StudentId studentId,
+        StudentId? studentId,
         ParentTuteurId parentId,
         ApplicantContact contact,
         string formValuesJson,
+        string studentFirstName,
+        string studentLastName,
         UserId createdBy)
     {
+        if (!string.IsNullOrWhiteSpace(studentFirstName))
+        {
+            return DomainErrors.Required(nameof(studentFirstName));
+        }
+        if (!string.IsNullOrWhiteSpace(studentLastName))
+        {
+            return DomainErrors.Required(nameof(studentLastName));
+        }
+        string identityKey = SharedKernel.ValueObjects.IdentityKey.Generate().Value;
+
         var application = new StudentApplication(
             id, sessionId, schoolId, targetGradeId,
             academicYear, applicationType, studentId, parentId,
-            contact, formValuesJson, createdBy);
+            contact, formValuesJson, identityKey,studentFirstName, studentLastName,createdBy);
 
         application.RaiseDomainEvent(new StudentApplicationSubmittedEvent(
             Guid.NewGuid(), DateTime.UtcNow,
             id, sessionId, schoolId, targetGradeId, academicYear, applicationType));
 
         return application;
+    }
+
+    public void AssignStudent(StudentId studentId)
+    {
+        StudentId = studentId;
     }
 public ErrorOr<Success> Reserve(QueueInfo queueInfo, DateTime expiryDate)
 {
@@ -194,7 +218,7 @@ public ErrorOr<Success> Enroll(UserId enrolledBy)
     RaiseDomainEvent(new StudentApplicationEnrolledEvent(
         Guid.NewGuid(), DateTime.UtcNow,
         Id.Value, SessionId.Value, SchoolId.Value,
-        StudentId.Value));
+        StudentId!.Value));
 
     return Result.Success;
 }

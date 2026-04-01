@@ -4,6 +4,9 @@
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
     <PackageReference Include="Azure.Storage.Blobs" />
     <PackageReference Include="EFCore.NamingConventions" />
+    <PackageReference Include="Hangfire.AspNetCore" />
+    <PackageReference Include="Hangfire.Core" />
+    <PackageReference Include="Hangfire.PostgreSql" />
     <PackageReference Include="Keycloak.AuthServices.Authentication" />
     <PackageReference Include="Keycloak.AuthServices.Sdk" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />

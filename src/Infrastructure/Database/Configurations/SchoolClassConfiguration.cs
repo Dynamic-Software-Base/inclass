@@ -66,12 +66,6 @@ public sealed class SchoolClassConfiguration : IEntityTypeConfiguration<SchoolCl
                 .IsRequired();
         });
 
-        // ── Gender ────────────────────────────────────────────────────────────
-        builder.Property(x => x.Gender)
-            .HasColumnName("gender")
-            .HasConversion<string>()
-            .HasMaxLength(20)
-            .IsRequired();
 
         // ── Enrollment counter ────────────────────────────────────────────────
         builder.Property(x => x.CurrentEnrollmentCount)
