@@ -55,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<ISchoolClassRepository, SchoolClassRepository>();
         services.AddScoped<IRegistrationSessionRepository, RegistrationSessionRepository>();
         services.AddScoped<IStudentApplicationRepository, StudentApplicationRepository>();
+        services.AddScoped<IStudentRepository, StudentRepository>();
         services.AddHttpClient<IGeoCodingService, GoogleGeocodingService>();
         services.AddScoped<IEducationalSystemRepository, EducationalSystemRepository>();
         services.AddScoped<IRegistrationFormSchemaRepository, RegistrationFormSchemaRepository>();
