@@ -38,6 +38,9 @@ public sealed class RegistrationSessionConfiguration
             .HasColumnName("form_schema_id")
             .HasConversion(id => id.Value, value => RegistrationFormSchemaId.From(value))
             .IsRequired();
+        builder.Property(s => s.WaitlistCount)
+            .IsRequired()
+            .HasDefaultValue(0);
 
         // ── AcademicYear (owned value object) ────────────────────────────────
         // 3 columns: academic_year_value, academic_year_start_year, academic_year_end_year

@@ -7,16 +7,6 @@ using SharedKernel.ValueObjects.StronglyTypedIds;
 
 namespace Infrastructure.Database.Seeders;
 
-/// <summary>
-/// Seeds the Moroccan national education system (MEN) with its full
-/// cycle and grade definition tree.
-///
-/// Idempotency strategy: checks by stable Code values, never by ID or name.
-/// Codes are the contract — they must never change once in production.
-/// New grades can be added freely; existing ones are never modified by this seeder.
-///
-/// Massar codes sourced from the MEN Massar platform grade identifiers.
-/// </summary>
 public sealed class MoroccanEducationSystemSeeder : ISeeder
 {
     public int Order => 10; // Runs before any seeder that depends on grade definitions

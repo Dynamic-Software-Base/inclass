@@ -38,8 +38,8 @@ public sealed record RegistrationPhase
         return new RegistrationPhase(startDate, endDate, phaseType,allowedApplicantType);
     }
     public bool IsActive(DateTime utcNow) => utcNow >= StartDate && utcNow <= EndDate;
-    public bool IsForApplicantType(ApplicantType applicantType)  =>
+    public bool IsForApplicantType(ApplicantType applicantType) =>
         AllowedApplicantType == AllowedApplicantType.All
         || (AllowedApplicantType == AllowedApplicantType.ReturningOnly
-            && applicantType == ApplicantType.New);
+            && applicantType == ApplicantType.Returning);
 }

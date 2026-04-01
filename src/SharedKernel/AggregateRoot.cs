@@ -2,7 +2,7 @@
 
 namespace SharedKernel;
 
-public class AggregateRoot<TSelf , TId> : BaseAuditableEntity<TSelf , TId>
+public class AggregateRoot<TSelf , TId> : BaseAuditableEntity<TSelf , TId>,IHasDomainEvents
 where TSelf : AggregateRoot<TSelf, TId>
 where TId : notnull
 {

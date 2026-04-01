@@ -22,4 +22,21 @@ public sealed record QueueInfo
 
         return new QueueInfo(position, processingDate);
     }
+    public static ErrorOr<QueueInfo> CreateRescheduled(
+        int position,
+        DateOnly originalProcessingDate,
+        DateOnly calculatedNewDate)
+    {
+        if (position <= 0)
+        {
+            return Error.Validation(
+                "QueueInfo.InvalidPosition",
+                "La position dans la file doit être supérieure à zéro.");
+        }
+
+        DateOnly cap = originalProcessingDate.AddDays(2);
+        DateOnly finalDate = calculatedNewDate > cap ? cap : calculatedNewDate;
+
+        return new QueueInfo(position, finalDate);
+    }
 }

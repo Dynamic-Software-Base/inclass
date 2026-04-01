@@ -15,7 +15,6 @@ public sealed class SchoolClass : AggregateRoot<SchoolClass, SchoolClassId>
     public AcademicYear AcademicYear { get; private set; } = null!;
     public ClassName Name { get; private set; } = null!;
     public ClassCapacity Capacity { get; private set; } = null!;
-    public ClassGender Gender { get; private set; }
     public int CurrentEnrollmentCount { get; private set; }
 
     private SchoolClass() { }
@@ -27,7 +26,6 @@ public sealed class SchoolClass : AggregateRoot<SchoolClass, SchoolClassId>
         AcademicYear academicYear,
         ClassName name,
         ClassCapacity capacity,
-        ClassGender gender,
         UserId createdBy)
         : base(id, createdBy)
     {
@@ -36,7 +34,6 @@ public sealed class SchoolClass : AggregateRoot<SchoolClass, SchoolClassId>
         AcademicYear = academicYear;
         Name = name;
         Capacity = capacity;
-        Gender = gender;
         CurrentEnrollmentCount = 0;
     }
 
@@ -47,12 +44,11 @@ public sealed class SchoolClass : AggregateRoot<SchoolClass, SchoolClassId>
         AcademicYear academicYear,
         ClassName name,
         ClassCapacity capacity,
-        UserId createdBy,
-        ClassGender gender = ClassGender.Mixed)
+        UserId createdBy)
     {
         var schoolClass = new SchoolClass(
             id, schoolId, gradeDefinitionId,
-            academicYear, name, capacity, gender, createdBy);
+            academicYear, name, capacity, createdBy);
 
         schoolClass.RaiseDomainEvent(new SchoolClassCreatedEvent(
             Guid.NewGuid(), DateTime.UtcNow,

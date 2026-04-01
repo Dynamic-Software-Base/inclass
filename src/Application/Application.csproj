@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Registration\" />
+    <Folder Include="Schools\Classes\Queries\" />
   </ItemGroup>
 
 </Project>
