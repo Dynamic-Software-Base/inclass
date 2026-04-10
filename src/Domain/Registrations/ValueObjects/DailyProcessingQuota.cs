@@ -26,17 +26,20 @@ public record DailyProcessingQuota
         DateTime submittedAt,
         TimeOnly dailyCutoff)
     {
-        int daysOffset = (queuePosition - 1) / Value;
-        DateOnly assignedDate = sessionStartDate.AddDays(daysOffset);
         var submittedDate = DateOnly.FromDateTime(submittedAt);
         var submittedTime = TimeOnly.FromDateTime(submittedAt);
 
-        if (submittedDate == assignedDate && submittedTime > dailyCutoff)
+        // Effective base: never assign a date in the past
+        DateOnly effectiveBase = sessionStartDate > submittedDate ? sessionStartDate : submittedDate;
+
+        // If submitted after cutoff today, next available slot starts tomorrow
+        if (submittedTime > dailyCutoff)
         {
-            assignedDate = assignedDate.AddDays(1);
+            effectiveBase = effectiveBase.AddDays(1);
         }
 
-        return assignedDate;
+        int daysOffset = (queuePosition - 1) / Value;
+        return effectiveBase.AddDays(daysOffset);
     }
 
     public override string ToString() => $"{Value} dossiers/jour";

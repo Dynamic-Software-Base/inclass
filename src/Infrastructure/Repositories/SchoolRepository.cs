@@ -6,6 +6,7 @@ using Contract.InClass.Common;
 using Contract.InClass.Pagination;
 using Contract.InClass.Response;
 using Contract.InClass.Response.School;
+using Domain.Registrations.Enums;
 using Domain.Schools;
 using Domain.Users;
 using Infrastructure.Database;
@@ -122,28 +123,85 @@ public class SchoolRepository : ISchoolRepository
 
         // pagination
 
-        List<SchoolSummaryDto> items = await q.Skip((query.Page - 1) * query.PageSize)
+        var pagedSchools = await q
+            .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
-            .Select(s => new SchoolSummaryDto(
-                s.Id.Value,
+            .Select(s => new
+            {
+                s.Id,
                 s.Name,
                 s.Ar_Name,
-                s.Address.City,
+                s.Address,
                 s.Description,
-                s.Address.Coordinates!.Latitude,
-                s.Address.Coordinates.Longitude,
-                ToDto(s.GradeLevels),
-                s.Pictures.Select(p => new SchoolPictureResponse(
-                    StoredFileId:p.StoredFileId ,
-                    Url: fileResolver.GetAccessUrl(p.StoredFileId),
-                    IsMain: p.IsMain)).ToList()))
-            .ToListAsync<SchoolSummaryDto>(cancellationToken);
+                s.GradeLevels,
+                Pictures = s.Pictures.Select(p => new { p.StoredFileId, p.IsMain }).ToList()
+            })
+            .ToListAsync(cancellationToken);
 
-        return new PagedResult<SchoolSummaryDto>()
+
+        var schoolIds = pagedSchools.Select(s => s.Id).ToList();
+
+        var openSessions = await _dbContext.RegistrationSessions
+            .AsNoTracking()
+            .Where(rs => schoolIds.Contains(rs.SchoolId) && rs.Status == RegistrationSessionStatus.Open)
+            .Join(
+                _dbContext.GradeDefinitions.Include(g => g.Cycle),
+                rs => rs.GradeDefinitionId,
+                g  => g.Id,
+                (rs,g) => new
+                {
+                    rs.Id,
+                    rs.SchoolId,
+                    rs.GradeDefinitionId,
+                    GradeName_Fr  = g.Name_Fr,
+                    GradeName_Ar  = g.Name_Ar,
+                    CycleName_Fr  = g.Cycle.Name_Fr,
+                    CycleName_Ar  = g.Cycle.Name_Ar,
+                    OpenDate      = rs.Period.OpenDate,
+                    CloseDate     = rs.Period.CloseDate,
+                    MaxSlots      = rs.Capacity.MaxSlots,
+                    rs.ReservedCount,
+                    rs.EnrolledCount
+                })
+            .ToListAsync(cancellationToken);
+
+        var sessionsBySchool = openSessions
+            .GroupBy(rs => rs.SchoolId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(rs => new OpenSessionSummaryDto(
+                    rs.Id.Value,
+                    rs.GradeDefinitionId.Value,
+                    rs.GradeName_Fr,
+                    rs.GradeName_Ar,
+                    rs.CycleName_Fr,
+                    rs.CycleName_Ar,
+                    rs.OpenDate.ToDateTime(new TimeOnly(8, 0, 0)),
+                    rs.CloseDate.HasValue ? rs.CloseDate.Value.ToDateTime(new TimeOnly(8, 0, 0)) : null,
+                    rs.MaxSlots,
+                    rs.ReservedCount,
+                    rs.EnrolledCount
+                )).ToList());
+        var items = pagedSchools.Select(s => new SchoolSummaryDto(
+            s.Id.Value,
+            s.Name,
+            s.Ar_Name,
+            s.Address.City,
+            s.Description,
+            s.Address.Coordinates?.Latitude,
+            s.Address.Coordinates?.Longitude,
+            ToDto(s.GradeLevels),
+            s.Pictures.Select(p => new SchoolPictureResponse(
+                p.StoredFileId,
+                fileResolver.GetAccessUrl(p.StoredFileId),
+                p.IsMain)).ToList(),
+            sessionsBySchool.TryGetValue(s.Id, out List<OpenSessionSummaryDto>? sessions) ? sessions : []
+        )).ToList();
+         return new PagedResult<SchoolSummaryDto>
         {
-            Items = items,
+            Items    = items,
             TotalCount = totalCount,
-            Page = query.Page,
+            Page     = query.Page,
             PageSize = query.PageSize
         };
     }
@@ -164,7 +222,8 @@ public class SchoolRepository : ISchoolRepository
                 s.Pictures.Select(p => new SchoolPictureResponse(
                     StoredFileId: p.StoredFileId,
                     Url: fileResolver.GetAccessUrl(p.StoredFileId),
-                    IsMain: p.IsMain)).ToList()))
+                    IsMain: p.IsMain)).ToList(),
+                new List<OpenSessionSummaryDto>()))
             .ToListAsync(cancellationToken);
     }
 

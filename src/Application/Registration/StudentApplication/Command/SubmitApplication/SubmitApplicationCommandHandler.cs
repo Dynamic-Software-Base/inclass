@@ -15,7 +15,7 @@ namespace Application.Registration.StudentApplication.Command.SubmitApplication;
 
 
 public sealed class SubmitApplicationCommandHandler
-    : IRequestHandler<SubmitApplicationCommand, ErrorOr<Guid>>
+    : IRequestHandler<SubmitApplicationCommand, ErrorOr<SubmitApplicationResult>>
 {
     private readonly IStudentApplicationRepository _applicationRepository;
     private readonly IRegistrationSessionRepository _sessionRepository;
@@ -37,7 +37,7 @@ public sealed class SubmitApplicationCommandHandler
         _currentUser = currentUser;
     }
 
-    public async Task<ErrorOr<Guid>> Handle(
+    public async Task<ErrorOr<SubmitApplicationResult>> Handle(
         SubmitApplicationCommand request,
         CancellationToken cancellationToken)
     {
@@ -183,7 +183,9 @@ public sealed class SubmitApplicationCommandHandler
 
             ErrorOr<Success> reserveResult = application.Reserve(
                 queueInfoResult.Value,
-                processingDateResult.Value.ToDateTime(TimeOnly.MinValue));
+                DateTime.SpecifyKind(
+                    processingDateResult.Value.ToDateTime(TimeOnly.MinValue),
+                    DateTimeKind.Utc));
 
             if (reserveResult.IsError)
             {
@@ -204,7 +206,7 @@ public sealed class SubmitApplicationCommandHandler
         // 10. Persist
         await _applicationRepository.AddAsync(application, cancellationToken);
 
-        return application.Id.Value;
+        return new SubmitApplicationResult(application.Id.Value, application.IdentityKey);
     }
 
     private static ErrorOr<Success> ValidateFormAgainstSchema(

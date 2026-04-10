@@ -6,11 +6,13 @@ public record AcademicYear
     public int StartYear { get; init; }
     public int EndYear { get; init; }
 
+    private AcademicYear() { }  // ← EF Core needs this
+
     private AcademicYear(string value, int startYear, int endYear)
     {
-        Value = value;
+        Value     = value;
         StartYear = startYear;
-        EndYear = endYear;
+        EndYear   = endYear;
     }
 
     public static ErrorOr<AcademicYear> Create(string value)
@@ -31,7 +33,7 @@ public record AcademicYear
 
         if (endYear != startYear + 1)
         {
-            return Error.Validation("AcademicYear.Range", "Starting year must be less then end date");
+            return Error.Validation("AcademicYear.Range", "Starting year must be less than end date");
         }
 
         return new AcademicYear(value, startYear, endYear);

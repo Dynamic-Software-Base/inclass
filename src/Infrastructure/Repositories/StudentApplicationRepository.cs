@@ -44,9 +44,9 @@ internal sealed class StudentApplicationRepository(ApplicationDbContext dbContex
             .AsNoTracking()
             .AnyAsync(a =>
                     a.SessionId == sessionId &&
-                    a.StudentFirstName.Equals(firstName, StringComparison.OrdinalIgnoreCase) &&
-                    a.StudentLastName.Equals(lastName, StringComparison.OrdinalIgnoreCase) &&
-                    a.Contact.PhoneNumber!.Number.Equals(phoneNumber, StringComparison.OrdinalIgnoreCase),
+                    EF.Functions.ILike(a.StudentFirstName, firstName) &&
+                    EF.Functions.ILike(a.StudentLastName, lastName) &&
+                    EF.Functions.ILike(a.Contact.PhoneNumber!.Number, phoneNumber),
                 cancellationToken);
     }
 

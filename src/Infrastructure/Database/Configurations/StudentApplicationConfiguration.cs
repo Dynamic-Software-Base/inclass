@@ -161,6 +161,16 @@ public sealed class StudentApplicationConfiguration
             .HasColumnName("last_modified_by")
             .HasConversion(id => id.Value, value => UserId.From(value));
 
+        builder.Property(x => x.StudentFirstName)
+            .HasColumnName("student_first_name")
+            .IsRequired();
+        builder.Property(x => x.StudentLastName)
+            .HasColumnName("student_last_name")
+            .IsRequired();
+
+        builder.Property(x=>x.IdentityKey)
+            .HasColumnName("identity_key")
+            .IsRequired();
         // ── Indexes ───────────────────────────────────────────────────────────
 
         builder.HasIndex(x => new { x.StudentId, x.SessionId })

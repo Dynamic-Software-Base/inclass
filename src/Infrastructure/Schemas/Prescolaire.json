@@ -30,6 +30,7 @@
       "fields": [
         {
           "key": "first_name_fr",
+          "role": "studentFirstName",
           "label": "Prénom (en français)",
           "fieldType": "text",
           "isRequired": true,
@@ -42,6 +43,7 @@
         {
           "key": "last_name",
           "label": "Nom de famille",
+          "role": "studentLastName",
           "fieldType": "text",
           "isRequired": true,
           "sortOrder": 2,
@@ -80,17 +82,6 @@
             }
           ],
           "displayCondition": null
-        },
-        {
-          "key": "national_id",
-          "label": "Identifiant national",
-          "fieldType": "text",
-          "isRequired": true,
-          "sortOrder": 5,
-          "placeholder": "Code MASSAR ou CIN",
-          "hint": "Numéro MASSAR pour les élèves ou CIN pour les adultes",
-          "options": null,
-          "displayCondition": null
         }
       ]
     },
@@ -124,11 +115,24 @@
         },
         {
           "key": "parent_phone",
+          "role": "contactPhone",
           "label": "Téléphone du parent / tuteur",
           "fieldType": "text",
           "isRequired": true,
           "sortOrder": 3,
           "placeholder": "06XXXXXXXX",
+          "hint": null,
+          "options": null,
+          "displayCondition": null
+        },
+        {
+          "key": "parent_email",
+          "label": "email address",
+          "role": "contactEmail",
+          "fieldType": "email",
+          "isRequired": true,
+          "sortOrder": 5,
+          "placeholder": "email address",
           "hint": null,
           "options": null,
           "displayCondition": null
@@ -156,40 +160,6 @@
             }
           ],
           "displayCondition": null
-        }
-      ]
-    },
-    {
-      "key": "health",
-      "title": "Informations médicales",
-      "sortOrder": 4,
-      "displayCondition": null,
-      "fields": [
-        {
-          "key": "has_medical_conditions",
-          "label": "L'élève a-t-il des antécédents médicaux ?",
-          "fieldType": "boolean",
-          "isRequired": true,
-          "sortOrder": 1,
-          "placeholder": null,
-          "hint": "Maladies chroniques, allergies, handicaps, etc.",
-          "options": null,
-          "displayCondition": null
-        },
-        {
-          "key": "medical_notes",
-          "label": "Précisions médicales",
-          "fieldType": "textarea",
-          "isRequired": false,
-          "sortOrder": 2,
-          "placeholder": "Décrivez les conditions médicales de l'élève",
-          "hint": "Ces informations resteront confidentielles",
-          "options": null,
-          "displayCondition": {
-            "field": "has_medical_conditions",
-            "operator": "eq",
-            "value": "true"
-          }
         }
       ]
     },
@@ -222,47 +192,6 @@
           "sortOrder": 2,
           "placeholder": "Ex: 14.50",
           "hint": "Note sur 20",
-          "options": null,
-          "displayCondition": null
-        }
-      ]
-    },
-    {
-      "key": "child_development",
-      "title": "Développement de l'enfant",
-      "sortOrder": 6,
-      "displayCondition": null,
-      "fields": [
-        {
-          "key": "speaks_arabic",
-          "label": "L'enfant parle arabe",
-          "fieldType": "boolean",
-          "isRequired": true,
-          "sortOrder": 1,
-          "placeholder": null,
-          "hint": null,
-          "options": null,
-          "displayCondition": null
-        },
-        {
-          "key": "speaks_french",
-          "label": "L'enfant parle français",
-          "fieldType": "boolean",
-          "isRequired": true,
-          "sortOrder": 2,
-          "placeholder": null,
-          "hint": null,
-          "options": null,
-          "displayCondition": null
-        },
-        {
-          "key": "has_attended_nursery",
-          "label": "A fréquenté une crèche",
-          "fieldType": "boolean",
-          "isRequired": true,
-          "sortOrder": 3,
-          "placeholder": null,
-          "hint": "Crèche ou garderie avant l'école préscolaire",
           "options": null,
           "displayCondition": null
         }

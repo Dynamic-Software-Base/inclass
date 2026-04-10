@@ -1,4 +1,5 @@
-﻿using Domain.Registrations;
+﻿using Domain.EducationalSystem.Entities;
+using Domain.Registrations;
 using Domain.Schools;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,4 +13,6 @@ public interface IApplicationDbContext
     DbSet<RegistrationSession> RegistrationSessions { get; }
     DbSet<SchoolClass> SchoolClasses { get; }
     DbSet<StudentApplication> StudentApplications { get; }
+    DbSet<GradeDefinition> GradeDefinitions { get; }
+    DbSet<GradeCycleDefinition> GradeCycleDefinitions { get; }
 }

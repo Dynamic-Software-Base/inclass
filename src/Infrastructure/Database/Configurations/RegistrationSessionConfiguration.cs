@@ -59,7 +59,10 @@ public sealed class RegistrationSessionConfiguration
                 .HasColumnName("academic_year_end_year")
                 .IsRequired();
         });
-
+        builder.Property(s => s.WaitlistCount)
+            .HasColumnName("waitlist_count")
+            .IsRequired()
+            .HasDefaultValue(0);
         // ── RegistrationPeriod (owned value object) ────────────────────────────
         // 2 columns: period_open_date, period_close_date
         builder.OwnsOne(x => x.Period, p =>

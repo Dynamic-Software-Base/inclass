@@ -33,7 +33,7 @@ public class RegistrationSessionRepository : IRegistrationSessionRepository
     {
       return await dbContext.RegistrationSessions.AnyAsync(c => c.SchoolId == schoolId
                                                                 && gradeDefinitionId ==  c.GradeDefinitionId
-                                                                && c.AcademicYear == academicYear
+                                                                && c.AcademicYear.Value == academicYear.Value
                                                                 ,cancellationToken);
     }
 

@@ -1,14 +1,14 @@
-﻿using Application.Registration.StudentApplication.Command.SubmitApplication;
-using FluentValidation;
+﻿using FluentValidation;
 
-namespace Application.Registration.Applications.Commands.SubmitApplication;
+namespace Application.Registration.StudentApplication.Command.SubmitApplication;
 
 public class SubmitApplicationCommandValidator
     : AbstractValidator<SubmitApplicationCommand>
 {
     public SubmitApplicationCommandValidator()
     {
-        RuleFor(x => x.SessionId).NotEmpty();
+        RuleFor(x => x.SessionId)
+            .NotEmpty();
 
         RuleFor(x => x.StudentFirstName)
             .NotEmpty()

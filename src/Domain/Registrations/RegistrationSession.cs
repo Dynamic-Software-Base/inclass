@@ -145,7 +145,23 @@ public sealed class RegistrationSession
     {
         WaitlistCount++;
     }
+    public ErrorOr<Success> UpdateStrategy(AssignmentStrategy strategy, UserId updatedBy)
+    {
+        if (Status == RegistrationSessionStatus.Cancelled)
+        {
+            return Error.Failure("RegistrationSession.Cancelled", "Cannot update a cancelled session.");
+        }
 
+        if (Status == RegistrationSessionStatus.Closed)
+        {
+            return Error.Failure("RegistrationSession.Closed", "Cannot update a closed session.");
+        }
+
+        AssignmentStrategy = strategy;
+        SetUpdated(DateTime.UtcNow,updatedBy);
+
+        return Result.Success;
+    }
     public void ReleaseFromWaitlist()
     {
         if (WaitlistCount > 0)
@@ -290,7 +306,7 @@ public sealed class RegistrationSession
     {
         if (ProcessingQuota != null)
         {
-            return ProcessingQuota.CalculateProcessingDate(DateOnly.FromDateTime(Period.OpenDate), queuePosition,
+            return ProcessingQuota.CalculateProcessingDate(Period.OpenDate, queuePosition,
                 submittedAt, DailyCutoffTime);
         }
 
