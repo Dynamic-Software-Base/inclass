@@ -114,7 +114,7 @@ public sealed class CreateBatchRegistrationSessionsCommandHandler
                 .Where(c =>
                     c.SchoolId == schoolId &&
                     c.GradeDefinitionId == gradeDefinitionId &&
-                    c.AcademicYear == academicYear)
+                    c.AcademicYear.Value == academicYear.Value)
                 .Select(c => c.Capacity.MaxStudents)
                 .ToListAsync(cancellationToken);
 

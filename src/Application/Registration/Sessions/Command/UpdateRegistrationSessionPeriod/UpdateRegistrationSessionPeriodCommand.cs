@@ -4,5 +4,5 @@ namespace Application.Registration.Sessions.Command.UpdateRegistrationSessionPer
 
 public record UpdateRegistrationSessionPeriodCommand(
     Guid SessionId,
-    DateTime OpenDate,
-    DateTime CloseDate) : ICommand<ErrorOr<Success>>;
+    DateOnly  OpenDate,
+    DateOnly? CloseDate) : ICommand<ErrorOr<Success>>;

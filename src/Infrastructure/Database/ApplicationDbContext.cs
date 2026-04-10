@@ -38,7 +38,7 @@ public sealed class ApplicationDbContext(
     public DbSet<StudentExtendedData>   StudentExtendedData     { get; set; }
 
 
-    public DbSet<SchoolClass> SchoolClasses { get; }
+    public DbSet<SchoolClass> SchoolClasses { get; set; }
 
 
     public DbSet<OutboxMessage> OutboxMessages { get; set; }

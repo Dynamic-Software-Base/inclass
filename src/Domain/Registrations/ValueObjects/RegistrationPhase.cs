@@ -4,16 +4,16 @@ namespace Domain.Registrations.ValueObjects;
 
 public sealed record RegistrationPhase
 {
-    public DateTime StartDate { get; init; }
-    public DateTime EndDate { get; init; }
+    public DateOnly StartDate { get; init; }
+    public DateOnly? EndDate { get; init; }
     public RegistrationPhaseType PhaseType { get; init; }
     public AllowedApplicantType AllowedApplicantType { get; init; }
 
     private RegistrationPhase() { }
 
     internal RegistrationPhase(
-        DateTime startDate,
-        DateTime endDate,
+        DateOnly startDate,
+        DateOnly? endDate,
         RegistrationPhaseType phaseType,
         AllowedApplicantType allowedApplicantType)
     {
@@ -24,8 +24,8 @@ public sealed record RegistrationPhase
     }
 
     public static ErrorOr<RegistrationPhase> Create(
-        DateTime startDate,
-        DateTime endDate,
+        DateOnly startDate,
+        DateOnly? endDate,
         RegistrationPhaseType phaseType,
         AllowedApplicantType allowedApplicantType)
     {
@@ -35,9 +35,14 @@ public sealed record RegistrationPhase
                 "RegistrationPhase.InvalidRange",
                 "La date de début doit être antérieure à la date de fin.");
         }
-        return new RegistrationPhase(startDate, endDate, phaseType,allowedApplicantType);
+
+        return new RegistrationPhase(startDate, endDate, phaseType, allowedApplicantType);
     }
-    public bool IsActive(DateTime utcNow) => utcNow >= StartDate && utcNow <= EndDate;
+
+
+    public bool IsActive(DateTime utcNow) =>
+        DateOnly.FromDateTime(utcNow) >= StartDate && DateOnly.FromDateTime(utcNow) <= EndDate;
+
     public bool IsForApplicantType(ApplicantType applicantType) =>
         AllowedApplicantType == AllowedApplicantType.All
         || (AllowedApplicantType == AllowedApplicantType.ReturningOnly

@@ -48,7 +48,6 @@ public sealed class SchoolClassConfiguration : IEntityTypeConfiguration<SchoolCl
                 .HasColumnName("academic_year_end_year")
                 .IsRequired();
         });
-
         // ── ClassName (owned value object) ────────────────────────────────────
         builder.OwnsOne(x => x.Name, n =>
         {

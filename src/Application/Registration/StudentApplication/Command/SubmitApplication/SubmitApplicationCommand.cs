@@ -12,4 +12,4 @@ public record SubmitApplicationCommand(
     string? ContactEmail,
     bool IsReturning,
     string? IdentityKey,
-    string FormValuesJson) : ICommand<ErrorOr<Guid>>;
+    string FormValuesJson) : ICommand<ErrorOr<SubmitApplicationResult>>;

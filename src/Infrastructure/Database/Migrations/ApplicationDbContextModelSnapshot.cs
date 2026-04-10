@@ -413,7 +413,8 @@ namespace Infrastructure.Database.Migrations
                     b.Property<int>("WaitlistCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasDefaultValue(0);
+                        .HasDefaultValue(0)
+                        .HasColumnName("waitlist_count");
 
                     b.HasKey("Id");
 
@@ -464,7 +465,8 @@ namespace Infrastructure.Database.Migrations
 
                     b.Property<string>("IdentityKey")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("identity_key");
 
                     b.Property<DateTimeOffset?>("LastModifiedAt")
                         .HasColumnType("timestamp with time zone")
@@ -503,7 +505,8 @@ namespace Infrastructure.Database.Migrations
 
                     b.Property<string>("StudentFirstName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("student_first_name");
 
                     b.Property<Guid?>("StudentId")
                         .HasColumnType("uuid")
@@ -511,7 +514,8 @@ namespace Infrastructure.Database.Migrations
 
                     b.Property<string>("StudentLastName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("student_last_name");
 
                     b.Property<DateTime>("SubmittedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1037,12 +1041,12 @@ namespace Infrastructure.Database.Migrations
                             b1.Property<Guid>("RegistrationSessionId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<DateTime?>("CloseDate")
-                                .HasColumnType("timestamp with time zone")
+                            b1.Property<DateOnly?>("CloseDate")
+                                .HasColumnType("date")
                                 .HasColumnName("period_close_date");
 
-                            b1.Property<DateTime>("OpenDate")
-                                .HasColumnType("timestamp with time zone")
+                            b1.Property<DateOnly>("OpenDate")
+                                .HasColumnType("date")
                                 .HasColumnName("period_open_date");
 
                             b1.HasKey("RegistrationSessionId");
@@ -1068,8 +1072,8 @@ namespace Infrastructure.Database.Migrations
                                 .HasColumnType("character varying(50)")
                                 .HasColumnName("allowed_applicant_type");
 
-                            b1.Property<DateTime>("EndDate")
-                                .HasColumnType("timestamp with time zone")
+                            b1.Property<DateOnly>("EndDate")
+                                .HasColumnType("date")
                                 .HasColumnName("end_date");
 
                             b1.Property<string>("PhaseType")
@@ -1078,8 +1082,8 @@ namespace Infrastructure.Database.Migrations
                                 .HasColumnType("character varying(50)")
                                 .HasColumnName("phase_type");
 
-                            b1.Property<DateTime>("StartDate")
-                                .HasColumnType("timestamp with time zone")
+                            b1.Property<DateOnly>("StartDate")
+                                .HasColumnType("date")
                                 .HasColumnName("start_date");
 
                             b1.Property<Guid>("session_id")

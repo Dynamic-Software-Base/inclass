@@ -86,11 +86,11 @@ public sealed class StudentApplication : AggregateRoot<StudentApplication,Studen
         string studentLastName,
         UserId createdBy)
     {
-        if (!string.IsNullOrWhiteSpace(studentFirstName))
+        if (string.IsNullOrWhiteSpace(studentFirstName))
         {
             return DomainErrors.Required(nameof(studentFirstName));
         }
-        if (!string.IsNullOrWhiteSpace(studentLastName))
+        if (string.IsNullOrWhiteSpace(studentLastName))
         {
             return DomainErrors.Required(nameof(studentLastName));
         }

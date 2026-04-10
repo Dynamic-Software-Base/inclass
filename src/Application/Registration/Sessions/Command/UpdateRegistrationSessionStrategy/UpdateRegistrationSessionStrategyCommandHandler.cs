@@ -1,0 +1,55 @@
+﻿using Application.Abstractions.Authentication;
+using Application.Abstractions.Interfaces.Repositories;
+using Domain.Registrations;
+using Domain.Registrations.Enums;
+using MediatR;
+using SharedKernel.ValueObjects.StronglyTypedIds;
+using SharedKernel.ValueObjects.StronglyTypedIds.Registration;
+
+namespace Application.Registration.Sessions.Command.UpdateRegistrationSessionStrategy;
+
+public sealed class UpdateRegistrationSessionStrategyCommandHandler
+    : IRequestHandler<UpdateRegistrationSessionStrategyCommand, ErrorOr<Success>>
+{
+    private readonly IRegistrationSessionRepository _repository;
+    private readonly ICurrentUserService _currentUser;
+
+    public UpdateRegistrationSessionStrategyCommandHandler(
+        IRegistrationSessionRepository repository,
+        ICurrentUserService currentUser)
+    {
+        _repository = repository;
+        _currentUser = currentUser;
+    }
+
+    public async Task<ErrorOr<Success>> Handle(
+        UpdateRegistrationSessionStrategyCommand request,
+        CancellationToken cancellationToken)
+    {
+        var sessionId = RegistrationSessionId.From(request.SessionId);
+        UserId userId = _currentUser.GetCurrentUser().Id;
+
+        RegistrationSession? session = await _repository.GetByIdAsync(sessionId, cancellationToken);
+        if (session is null)
+        {
+            return Error.NotFound("RegistrationSession.NotFound",
+                "The specified registration session was not found.");
+        }
+
+        if (!Enum.IsDefined(typeof(AssignmentStrategy), request.AssignmentStrategy))
+        {
+            return Error.Validation("AssignmentStrategy.Invalid",
+                "The provided assignment strategy is not valid.");
+        }
+
+        var strategy = (AssignmentStrategy)request.AssignmentStrategy;
+
+        ErrorOr<Success> result = session.UpdateStrategy(strategy, userId);
+        if (result.IsError)
+        {
+            return result.Errors;
+        }
+
+        return Result.Success;
+    }
+}

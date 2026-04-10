@@ -27,7 +27,7 @@ public class SchoolClassRepository : ISchoolClassRepository
         await  _context.SchoolClasses.AddRangeAsync(schoolClasses, cancellationToken);
     }
 
-    public async  Task<bool> ExistsAsync(SchoolId schoolId, GradeDefinitionId gradeDefinitionId, AcademicYear academicYear, string name,
+    public async Task<bool> ExistsAsync(SchoolId schoolId, GradeDefinitionId gradeDefinitionId, AcademicYear academicYear, string name,
         CancellationToken cancellationToken = default)
     {
         return await _context.SchoolClasses
@@ -35,10 +35,9 @@ public class SchoolClassRepository : ISchoolClassRepository
             .AnyAsync(c =>
                     c.SchoolId == schoolId &&
                     c.GradeDefinitionId == gradeDefinitionId &&
-                    c.AcademicYear == academicYear &&
-                    c.Name.Value.Equals(name, StringComparison.OrdinalIgnoreCase),
+                    c.AcademicYear.Value == academicYear.Value &&  // ← compare the string, not the record
+                    c.Name.Value == name,
                 cancellationToken);
-
     }
 
     public async Task<SchoolClass?> GetByIdAsync(SchoolClassId id, CancellationToken cancellationToken = default)
